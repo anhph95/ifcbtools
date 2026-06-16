@@ -16,6 +16,10 @@ dependencies = [
 ]
 
 [project.scripts]
+ifcb-add-stations = "ifcb.neslter.pipeline:add_stations_main"
+ifcb-fill-missing = "ifcb.neslter.fill:main"
+ifcb-merge-bottle = "ifcb.neslter.pipeline:merge_bottle_main"
+ifcb-merge-nutrient = "ifcb.neslter.pipeline:merge_nutrient_main"
 ifcb-process = "ifcb.neslter.cli:main"
 
 [tool.setuptools.packages.find]

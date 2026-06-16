@@ -7,7 +7,7 @@ import logging
 import sys
 from typing import Sequence
 
-from .constants import DEFAULT_BOTTLE_URL_TEMPLATE, DEFAULT_DATASET, DEFAULT_TAXONOMY_URL
+from .constants import DEFAULT_DATASET, DEFAULT_TAXONOMY_URL
 from .process import process
 
 LOGGER = logging.getLogger("ifcb.neslter")
@@ -47,11 +47,6 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Require an existing ifcb_taxonomy.csv instead of downloading it.",
     )
     parser.add_argument("--taxonomy-url", default=DEFAULT_TAXONOMY_URL)
-    parser.add_argument("--station-reference", default=None, help="Station reference CSV path.")
-    parser.add_argument("--max-station-distance-km", type=float, default=2.0)
-    parser.add_argument("--no-station-distance-limit", action="store_true")
-    parser.add_argument("--bottle-url-template", default=DEFAULT_BOTTLE_URL_TEMPLATE)
-    parser.add_argument("--skip-bottle-merge", action="store_true")
     parser.add_argument("--log-level", choices=["DEBUG", "INFO", "WARNING", "ERROR"], default="INFO")
     return parser.parse_args(argv)
 
@@ -59,7 +54,6 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
     logging.basicConfig(level=getattr(logging, args.log_level), format="%(levelname)s: %(message)s")
-    max_distance = None if args.no_station_distance_limit else args.max_station_distance_km
 
     try:
         outputs = process(
@@ -69,10 +63,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             sample_type=args.sample_type,
             download_taxonomy_if_missing=args.download_taxonomy_if_missing,
             taxonomy_url=args.taxonomy_url,
-            station_reference=args.station_reference,
-            max_station_distance_km=max_distance,
-            bottle_url_template=args.bottle_url_template,
-            skip_bottle_merge=args.skip_bottle_merge,
             data_types=args.data_type,
         )
     except Exception as exc:

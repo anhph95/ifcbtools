@@ -11,9 +11,7 @@ import pandas as pd
 
 from .casts import aggregate_cast_data
 from .constants import (
-    DEFAULT_BOTTLE_URL_TEMPLATE,
     DEFAULT_DATASET,
-    DEFAULT_STATION_REF_URL,
     DEFAULT_TAXONOMY_URL,
 )
 from .metadata import process_meta
@@ -46,10 +44,6 @@ def process_data_type(
     data_type: str,
     meta: pd.DataFrame,
     data_cols: Sequence[str],
-    station_reference: str = DEFAULT_STATION_REF_URL,
-    max_station_distance_km: float | None = 2.0,
-    bottle_url_template: str = DEFAULT_BOTTLE_URL_TEMPLATE,
-    skip_bottle_merge: bool = False,
 ) -> Path:
     """Process one raw IFCB data type and write a cleaned CSV."""
     input_dir = Path(input_dir)
@@ -65,20 +59,8 @@ def process_data_type(
         raise ValueError("Both metadata and raw data must contain a 'pid' column.")
 
     df = pd.merge(meta, raw, on="pid", how="left")
-    df = aggregate_cast_data(
-        df,
-        raw_data_cols,
-        station_reference=station_reference,
-        max_station_distance_km=max_station_distance_km,
-        bottle_url_template=bottle_url_template,
-        skip_bottle_merge=skip_bottle_merge,
-    )
+    df = aggregate_cast_data(df, raw_data_cols)
     df = normalize(df, raw_data_cols, data_type)
-
-    if "nearest_station" in df.columns:
-        df["nearest_station"] = df["nearest_station"].astype("string")
-    if "station_distance" in df.columns:
-        df["station_distance"] = pd.to_numeric(df["station_distance"], errors="coerce")
 
     output_dir.mkdir(parents=True, exist_ok=True)
     df.to_csv(output_path, index=False)
@@ -93,10 +75,6 @@ def process(
     sample_type: Sequence[str] | None = None,
     download_taxonomy_if_missing: bool = True,
     taxonomy_url: str = DEFAULT_TAXONOMY_URL,
-    station_reference: str = DEFAULT_STATION_REF_URL,
-    max_station_distance_km: float | None = 2.0,
-    bottle_url_template: str = DEFAULT_BOTTLE_URL_TEMPLATE,
-    skip_bottle_merge: bool = False,
     data_types: Sequence[str] = ("count", "carbon"),
 ) -> list[Path]:
     """Process MATLAB-exported IFCB CSV files for selected data types."""
@@ -130,10 +108,6 @@ def process(
             data_type=data_type,
             meta=meta,
             data_cols=data_cols,
-            station_reference=station_reference,
-            max_station_distance_km=max_station_distance_km,
-            bottle_url_template=bottle_url_template,
-            skip_bottle_merge=skip_bottle_merge,
         )
         for data_type in data_types
     ]

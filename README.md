@@ -21,12 +21,18 @@ ifcbtools/
 pip install -e .
 ```
 
-This installs the `ifcb.neslter` package and the `ifcb-process` command.
+This installs the `ifcb.neslter` package and the staged processing commands.
 
 ## Workflow
 
 ```text
-MATLAB export -> Python data process -> R analysis
+MATLAB export
+  -> clean
+  -> add nearest_station
+  -> optionally fill missing cast data
+  -> merge bottle data
+  -> merge nutrient data
+  -> analysis
 ```
 
 ## Export MATLAB products
@@ -63,7 +69,12 @@ X[t, i, j]
 
 where `t` is timestep, `i` is station or local community, and `j` is taxon.
 
-## Run the Python CLI
+## Run the Python pipeline
+
+The Python pipeline is split into explicit stages so different analyses can use
+different products.
+
+### 1. Clean MATLAB exports
 
 ```bash
 ifcb-process
@@ -81,6 +92,75 @@ Expected MATLAB-exported input files:
 The Python process uses `ifcb_taxonomy.csv` to identify taxon columns. If that
 file is missing, `ifcb-process` downloads it from the configured Google Sheet
 and saves it beside the MATLAB exports.
+
+This stage writes:
+
+```text
+ifcb_count_clean.csv
+ifcb_carbon_clean.csv
+```
+
+### 2. Add nearest station
+
+Assign `nearest_station` and `station_distance` to all rows using the current
+`StationLocator` workflow:
+
+```bash
+ifcb-add-stations data/NESLTER_transect
+```
+
+This reads `*_clean.csv` and writes:
+
+```text
+ifcb_count_station.csv
+ifcb_carbon_station.csv
+```
+
+### 3. Optionally fill missing cast data
+
+For balanced metacommunity analyses, fill missing surface or station casts from
+same-cruise underway samples:
+
+```bash
+ifcb-fill-missing data/NESLTER_transect --data-type carbon
+```
+
+This reads `*_station.csv` and writes:
+
+```text
+ifcb_carbon_filled.csv
+ifcb_taxonomy_filled.csv
+```
+
+The filled product is optional. Use `*_clean.csv` or `*_station.csv` for
+analyses that should only use observed samples.
+
+### 4. Merge bottle data
+
+```bash
+ifcb-merge-bottle data/NESLTER_transect --data-type carbon
+```
+
+By default this reads `*_filled.csv` and writes:
+
+```text
+ifcb_carbon_bottle.csv
+```
+
+Use `--input-stage station` or another stage name if you want bottle data
+merged into a different product.
+
+### 5. Merge nutrient data
+
+```bash
+ifcb-merge-nutrient data/NESLTER_transect --data-type carbon
+```
+
+By default this reads `*_bottle.csv` and writes:
+
+```text
+ifcb_carbon_nutrient.csv
+```
 
 ## Use station lookup independently
 
@@ -108,4 +188,22 @@ Rscript scripts/ifcb_single_season.R
 Rscript scripts/ifcb_power_analysis.R
 Rscript scripts/ifcb_sensitivity_analysis.R
 Rscript scripts/ifcb_seasonal_comparison.R
+```
+
+## Run the Python community workflows
+
+The Python community-variability scripts can use either clean or filled data.
+For balanced seasonal metacommunity analyses, use the filled product:
+
+```bash
+python analysis/community-variability/scripts/ifcb_single_season.py --data-version filled
+python analysis/community-variability/scripts/ifcb_power_analysis.py --data-version filled
+python analysis/community-variability/scripts/ifcb_sensitivity_analysis.py --data-version filled
+python analysis/community-variability/scripts/ifcb_seasonal_comparison.py
+```
+
+To use only the clean product:
+
+```bash
+python analysis/community-variability/scripts/ifcb_single_season.py --data-version clean
 ```

@@ -1,5 +1,13 @@
 __pycache__/
 *.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
 .Rhistory
 .RData
 .Rproj.user/

@@ -8,10 +8,10 @@ variability analysis.
 ```text
 ifcbtools/
 |-- pyproject.toml
-|-- scripts/matlab/                   # MATLAB export step
 |-- data/                             # Local MATLAB exports, ignored by Git
-|-- src/ifcb/neslter/                 # Python data processing package
-|-- R/community.variability/          # R package
+|-- matlab/                           # MATLAB export step
+|-- python/ifcb/neslter/              # Python data processing package
+|-- r/community.variability/          # R package
 `-- analysis/community-variability/   # R workflows and generated results
 ```
 
@@ -34,7 +34,7 @@ MATLAB export -> Python data process -> R analysis
 Run the MATLAB export script:
 
 ```matlab
-run("scripts/matlab/export_ifcb_mat.m")
+run("matlab/export_ifcb_mat.m")
 ```
 
 This writes local CSV files to:
@@ -46,13 +46,13 @@ data/<dataset>/
 ## Install the R package
 
 ```bash
-R CMD INSTALL R/community.variability
+R CMD INSTALL r/community.variability
 ```
 
 or from an R session:
 
 ```r
-install.packages("R/community.variability", repos = NULL, type = "source")
+install.packages("r/community.variability", repos = NULL, type = "source")
 ```
 
 The R package provides metacommunity variability functions for arrays:

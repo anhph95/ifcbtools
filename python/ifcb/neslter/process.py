@@ -29,7 +29,7 @@ def repo_root() -> Path:
 
 
 def matlab_export_data_dir(dataset: str = DEFAULT_DATASET) -> Path:
-    """Return the default data directory written by scripts/matlab/export_ifcb_mat.m."""
+    """Return the default data directory written by matlab/export_ifcb_mat.m."""
     return repo_root() / "data" / dataset
 
 

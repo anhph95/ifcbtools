@@ -33,11 +33,11 @@ fileList = {
 %% --- REPOSITORY-RELATIVE OUTPUT SETTINGS ---
 
 % This file lives in:
-%   <repo>/scripts/matlab/export_ifcb_mat.m
+%   <repo>/matlab/export_ifcb_mat.m
 %
-% Move three levels upward to recover <repo>, then write local exports to:
+% Move one level upward to recover <repo>, then write local exports to:
 %   <repo>/data/<dataset>/
-repoDir = fileparts(fileparts(fileparts(mfilename('fullpath'))));
+repoDir = fileparts(fileparts(mfilename('fullpath')));
 baseDir = fullfile(repoDir, 'data', dataset);
 
 %% --- ENSURE OUTPUT DIRECTORY EXISTS ---

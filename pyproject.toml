@@ -19,4 +19,4 @@ dependencies = [
 ifcb-process = "ifcb.neslter.cli:main"
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["python"]

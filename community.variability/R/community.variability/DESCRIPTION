@@ -1,0 +1,22 @@
+Package: community.variability
+Title: Community Variability Metrics for IFCB Metacommunities
+Version: 0.1.0
+Authors@R: person("Huy Anh", "Pham", email = "huy.pham@whoi.edu", role = c("aut", "cre"))
+Description: Calculates aggregate and compositional variability metrics for
+    metacommunity arrays X[t, i, j], where t is time, i is site, and j is
+    taxon.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports:
+    dplyr,
+    ggplot2,
+    grid,
+    gtable,
+    magrittr,
+    purrr,
+    rlang,
+    tibble,
+    tidyr,
+    vegan

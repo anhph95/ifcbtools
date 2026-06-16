@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pandas as pd
 
-LOGGER = logging.getLogger("ifcb_neslter")
+LOGGER = logging.getLogger("ifcb.neslter")
 
 
 def import_google_sheet(share_url: str, save_path: str | os.PathLike[str] | None = None) -> pd.DataFrame:

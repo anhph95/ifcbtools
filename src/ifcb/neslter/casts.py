@@ -12,7 +12,7 @@ import pandas as pd
 from .constants import DEFAULT_BOTTLE_URL_TEMPLATE
 from .stations import StationLocator
 
-LOGGER = logging.getLogger("ifcb_neslter")
+LOGGER = logging.getLogger("ifcb.neslter")
 
 
 def first_unique_or_join(values: pd.Series) -> object:

@@ -12,6 +12,7 @@
 ##   time  = repeated annual surveys t within one season
 ##   site  = NES-LTER stations i, treated as local communities
 ##   taxon = IFCB taxa j
+# install.packages("../../R/community.variability", repos = NULL, type = "source")
 rm(list = ls())
 library(vegan)
 library(dplyr)
@@ -23,7 +24,8 @@ library(colorspace)
 library(ggrepel)
 library(grid)
 library(readr)
-library(community.variability)
+# library(community.variability)
+devtools::load_all("../../R/community.variability")
 repo_dir <- normalizePath(getwd(), winslash = "/", mustWork = TRUE)
 results_dir <- file.path(repo_dir, "results")
 dir.create(results_dir, showWarnings = FALSE, recursive = TRUE)

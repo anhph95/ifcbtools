@@ -1,5 +1,7 @@
 """Shared constants for the NES-LTER IFCB processing package."""
 
+DEFAULT_DATASET = "NESLTER_broadscale"
+
 DEFAULT_TAXONOMY_URL = (
     "https://docs.google.com/spreadsheets/d/"
     "1mTmL3VN3TlNvkz4uJpDp34QQb5ImUlC4J7FpxKs4nFI/edit?gid=1521292620"

@@ -6,3 +6,4 @@ __pycache__/
 analysis/community-variability/results/
 analysis/community-variability/ifcb_single_season_output/
 analysis/community-variability/results/tracking/
+data/

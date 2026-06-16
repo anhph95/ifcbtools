@@ -1,6 +1,6 @@
 """Station lookup utilities.
 
-This module is intentionally independent from the rest of the IFCB pipeline so it
+This module is intentionally independent from the rest of the IFCB process so it
 can be imported and tested on its own.
 """
 
@@ -82,7 +82,7 @@ def nearest_station(
 ) -> tuple[object, float | object]:
     """Return the nearest active station name and distance in km.
 
-    This is the standalone helper function to use outside the full pipeline.
+    This is the standalone helper function to use outside the full data process.
     """
     st = load_station_reference(station_reference)
     distances = station_distances(lat=lat, lon=lon, timestamp=timestamp, station_reference=st)

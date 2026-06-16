@@ -8,7 +8,9 @@ variability analysis.
 ```text
 ifcbtools/
 |-- pyproject.toml
-|-- src/ifcb_neslter/                 # Python package
+|-- scripts/matlab/                   # MATLAB export step
+|-- data/                             # Local MATLAB exports, ignored by Git
+|-- src/ifcb/neslter/                 # Python data processing package
 |-- R/community.variability/          # R package
 `-- analysis/community-variability/   # R workflows and generated results
 ```
@@ -19,7 +21,27 @@ ifcbtools/
 pip install -e .
 ```
 
-This installs the `ifcb_neslter` package and the `ifcb-neslter-process` command.
+This installs the `ifcb.neslter` package and the `ifcb-process` command.
+
+## Workflow
+
+```text
+MATLAB export -> Python data process -> R analysis
+```
+
+## Export MATLAB products
+
+Run the MATLAB export script:
+
+```matlab
+run("scripts/matlab/export_ifcb_mat.m")
+```
+
+This writes local CSV files to:
+
+```text
+data/<dataset>/
+```
 
 ## Install the R package
 
@@ -44,21 +66,26 @@ where `t` is timestep, `i` is station or local community, and `j` is taxon.
 ## Run the Python CLI
 
 ```bash
-ifcb-neslter-process /path/to/input_data
-ifcb-neslter-process /path/to/input_data -o /path/to/output --sample-type cast underway
+ifcb-process
+ifcb-process --dataset NESLTER_broadscale
+ifcb-process /path/to/input_data -o /path/to/output --sample-type cast underway
 ```
 
-Expected input files:
+Expected MATLAB-exported input files:
 
 - `ifcb_metadata.csv`
-- `ifcb_taxonomy.csv`
+- `ifcb_class.csv`
 - `ifcb_count_raw.csv`
 - `ifcb_carbon_raw.csv`
+
+The Python process uses `ifcb_taxonomy.csv` to identify taxon columns. If that
+file is missing, `ifcb-process` downloads it from the configured Google Sheet
+and saves it beside the MATLAB exports.
 
 ## Use station lookup independently
 
 ```python
-from ifcb_neslter.stations import nearest_station, assign_nearest_stations
+from ifcb.neslter.stations import nearest_station, assign_nearest_stations
 
 station, distance_km = nearest_station(
     lat=41.2,

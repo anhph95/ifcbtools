@@ -1,4 +1,4 @@
-"""End-to-end IFCB processing pipeline."""
+"""Data processing for MATLAB-exported IFCB CSV files."""
 
 from __future__ import annotations
 
@@ -10,12 +10,27 @@ from typing import Iterable, Sequence
 import pandas as pd
 
 from .casts import aggregate_cast_data
-from .constants import DEFAULT_BOTTLE_URL_TEMPLATE, DEFAULT_TAXONOMY_URL, DEFAULT_STATION_REF_URL
+from .constants import (
+    DEFAULT_BOTTLE_URL_TEMPLATE,
+    DEFAULT_DATASET,
+    DEFAULT_STATION_REF_URL,
+    DEFAULT_TAXONOMY_URL,
+)
 from .metadata import process_meta
 from .normalize import normalize
 from .taxonomy import import_google_sheet
 
-LOGGER = logging.getLogger("ifcb_neslter")
+LOGGER = logging.getLogger("ifcb.neslter")
+
+
+def repo_root() -> Path:
+    """Return the repository root for an editable source checkout."""
+    return Path(__file__).resolve().parents[3]
+
+
+def matlab_export_data_dir(dataset: str = DEFAULT_DATASET) -> Path:
+    """Return the default data directory written by scripts/matlab/export_ifcb_mat.m."""
+    return repo_root() / "data" / dataset
 
 
 def validate_required_files(input_dir: Path, required_files: Iterable[str]) -> None:
@@ -25,7 +40,7 @@ def validate_required_files(input_dir: Path, required_files: Iterable[str]) -> N
         raise FileNotFoundError(f"Missing required file(s) in {input_dir}: {missing}")
 
 
-def process_dataset(
+def process_data_type(
     input_dir: str | os.PathLike[str],
     output_dir: str | os.PathLike[str],
     data_type: str,
@@ -36,7 +51,7 @@ def process_dataset(
     bottle_url_template: str = DEFAULT_BOTTLE_URL_TEMPLATE,
     skip_bottle_merge: bool = False,
 ) -> Path:
-    """Process one raw IFCB dataset and write a cleaned CSV."""
+    """Process one raw IFCB data type and write a cleaned CSV."""
     input_dir = Path(input_dir)
     output_dir = Path(output_dir)
     raw_path = input_dir / f"ifcb_{data_type}_raw.csv"
@@ -71,11 +86,12 @@ def process_dataset(
     return output_path
 
 
-def process_all(
-    input_dir: str | os.PathLike[str],
+def process(
+    input_dir: str | os.PathLike[str] | None = None,
     output_dir: str | os.PathLike[str] | None = None,
+    dataset: str = DEFAULT_DATASET,
     sample_type: Sequence[str] | None = None,
-    download_taxonomy_if_missing: bool = False,
+    download_taxonomy_if_missing: bool = True,
     taxonomy_url: str = DEFAULT_TAXONOMY_URL,
     station_reference: str = DEFAULT_STATION_REF_URL,
     max_station_distance_km: float | None = 2.0,
@@ -83,8 +99,8 @@ def process_all(
     skip_bottle_merge: bool = False,
     data_types: Sequence[str] = ("count", "carbon"),
 ) -> list[Path]:
-    """Run the full IFCB pipeline for selected data types."""
-    input_dir = Path(input_dir)
+    """Process MATLAB-exported IFCB CSV files for selected data types."""
+    input_dir = matlab_export_data_dir(dataset) if input_dir is None else Path(input_dir)
     output_dir = Path(output_dir) if output_dir is not None else input_dir
     taxonomy_path = input_dir / "ifcb_taxonomy.csv"
 
@@ -108,7 +124,7 @@ def process_all(
     data_cols = tax["Annotations"].dropna().astype(str).tolist()
 
     return [
-        process_dataset(
+        process_data_type(
             input_dir=input_dir,
             output_dir=output_dir,
             data_type=data_type,

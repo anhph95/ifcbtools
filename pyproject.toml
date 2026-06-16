@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ifcb-neslter"
+version = "0.1.0"
+description = "NES-LTER IFCB data processing pipeline"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Huy Anh Pham", email = "huy.pham@whoi.edu" }]
+dependencies = [
+  "pandas>=2.0",
+  "numpy>=1.24",
+  "geopy>=2.4",
+]
+
+[project.scripts]
+ifcb-neslter-process = "ifcb_neslter.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

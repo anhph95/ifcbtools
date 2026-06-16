@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.Rhistory
+.RData
+.Rproj.user/
+analysis/community-variability/results/
+analysis/community-variability/ifcb_single_season_output/
+analysis/community-variability/results/tracking/

@@ -59,16 +59,16 @@ and `sweep()` so the code follows the equations directly.
 
 Aggregate variability:
 
-- `CV_gamma`: regional aggregate variability
 - `CV_alpha`: local aggregate variability
-- `CV_phi`: spatial aggregate synchrony
+- `CV_gamma`: metacommunity aggregate variability
+- `CV_phi`: aggregate synchrony
 
 Compositional variability:
 
-- `BD_gamma`: regional compositional variability
 - `BD_alpha`: biomass-weighted local compositional variability
-- `BD_phi`: spatial compositional synchrony
-- `BD_beta`: biomass-weighted spatial compositional variability through time
+- `BD_gamma`: metacommunity compositional variability
+- `BD_phi`: compositional synchrony
+- `BD_beta`: local-scale spatial compositional variability
 
 The core equations are:
 

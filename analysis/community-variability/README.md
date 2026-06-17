@@ -208,7 +208,7 @@ time.
 
 $$
 BD_t^h =
-\sum_j \operatorname{Var}_i(z_{tij})
+\sum_j \mathrm{Var}_i(z_{tij})
 $$
 
 $$

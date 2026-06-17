@@ -75,16 +75,16 @@ The core equations are:
 $$
 CV_\gamma^2 =
 \left(
-\frac{\operatorname{sd}_t(X_{t\cdot\cdot})}
-{\operatorname{mean}_t(X_{t\cdot\cdot})}
+\frac{\mathrm{sd}_t(X_{t\cdot\cdot})}
+{\mathrm{mean}_t(X_{t\cdot\cdot})}
 \right)^2
 $$
 
 $$
 CV_\alpha^2 =
 \left(
-\frac{\sum_i \operatorname{sd}_t(X_{ti\cdot})}
-{\operatorname{mean}_t(X_{t\cdot\cdot})}
+\frac{\sum_i \mathrm{sd}_t(X_{ti\cdot})}
+{\mathrm{mean}_t(X_{t\cdot\cdot})}
 \right)^2,
 \quad
 \phi = \frac{CV_\gamma^2}{CV_\alpha^2}
@@ -99,17 +99,17 @@ $$
 
 $$
 BD_\gamma^h =
-\sum_j \operatorname{Var}_t(z_{t\cdot j})
+\sum_j \mathrm{Var}_t(z_{t\cdot j})
 $$
 
 $$
 BD_\alpha^h =
 \sum_i
 \left(
-\frac{\operatorname{mean}_t(X_{ti\cdot})}
-{\sum_i \operatorname{mean}_t(X_{ti\cdot})}
+\frac{\mathrm{mean}_t(X_{ti\cdot})}
+{\sum_i \mathrm{mean}_t(X_{ti\cdot})}
 \right)
-\sum_j \operatorname{Var}_t(z_{tij})
+\sum_j \mathrm{Var}_t(z_{tij})
 $$
 
 $$
@@ -124,7 +124,7 @@ BD_\beta^h =
 \frac{X_{t\cdot\cdot}}
 {\sum_t X_{t\cdot\cdot}}
 \right)
-\sum_j \operatorname{Var}_i(z_{tij})
+\sum_j \mathrm{Var}_i(z_{tij})
 $$
 
 ## Main Helpers

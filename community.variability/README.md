@@ -126,8 +126,8 @@ metacommunity biomass.
 $$
 CV_\gamma^2 =
 \left(
-\frac{\operatorname{sd}_t(X_{t\cdot\cdot})}
-{\operatorname{mean}_t(X_{t\cdot\cdot})}
+\frac{\mathrm{sd}_t(X_{t\cdot\cdot})}
+{\mathrm{mean}_t(X_{t\cdot\cdot})}
 \right)^2
 $$
 
@@ -144,8 +144,8 @@ within each local community, then scales that sum by mean regional biomass.
 $$
 CV_\alpha^2 =
 \left(
-\frac{\sum_i \operatorname{sd}_t(X_{ti\cdot})}
-{\operatorname{mean}_t(X_{t\cdot\cdot})}
+\frac{\sum_i \mathrm{sd}_t(X_{ti\cdot})}
+{\mathrm{mean}_t(X_{t\cdot\cdot})}
 \right)^2
 $$
 
@@ -180,7 +180,7 @@ composition after all local communities are pooled.
 
 $$
 BD_\gamma^h =
-\sum_j \operatorname{Var}_t(z_{t\cdot j})
+\sum_j \mathrm{Var}_t(z_{t\cdot j})
 $$
 
 How this works in code:
@@ -195,13 +195,13 @@ each local community, then averages local values with biomass weights.
 
 $$
 BD_i^h =
-\sum_j \operatorname{Var}_t(z_{tij})
+\sum_j \mathrm{Var}_t(z_{tij})
 $$
 
 $$
 w_i =
-\frac{\operatorname{mean}_t(X_{ti\cdot})}
-{\sum_i \operatorname{mean}_t(X_{ti\cdot})}
+\frac{\mathrm{mean}_t(X_{ti\cdot})}
+{\sum_i \mathrm{mean}_t(X_{ti\cdot})}
 $$
 
 $$
@@ -241,7 +241,7 @@ composition, then averages those spatial differences through time.
 
 $$
 BD_t^h =
-\sum_j \operatorname{Var}_i(z_{tij})
+\sum_j \mathrm{Var}_i(z_{tij})
 $$
 
 $$

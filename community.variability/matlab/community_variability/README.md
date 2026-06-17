@@ -44,26 +44,86 @@ add_baseline_delta.m
 
 ## Equations
 
+The MATLAB implementation uses the same notation as the top-level community
+variability documentation:
+
+$$
+X_{tij} = \text{biomass of taxon } j \text{ at time } t \text{ in site } i
+$$
+
+$$
+X_{ti\cdot} = \sum_j X_{tij}, \quad
+X_{t\cdot j} = \sum_i X_{tij}, \quad
+X_{t\cdot\cdot} = \sum_i \sum_j X_{tij}
+$$
+
+How this works in code:
+`make_community_array()` builds `X(time, site, taxon)`. Metric functions use
+MATLAB dimension reductions such as `sum`, `std`, `var`, and `mean` with
+`"omitnan"` so the code follows the equations directly.
+
 Aggregate variability uses total biomass:
 
-```text
-CV_gamma^2 = [sd_t(X_t..) / mean_t(X_t..)]^2
-CV_alpha^2 = [sum_i sd_t(X_ti.) / mean_t(X_t..)]^2
-CV_phi     = CV_gamma^2 / CV_alpha^2
-```
+$$
+CV_\gamma^2 =
+\left(
+\frac{\operatorname{sd}_t(X_{t\cdot\cdot})}
+{\operatorname{mean}_t(X_{t\cdot\cdot})}
+\right)^2
+$$
+
+$$
+CV_\alpha^2 =
+\left(
+\frac{\sum_i \operatorname{sd}_t(X_{ti\cdot})}
+{\operatorname{mean}_t(X_{t\cdot\cdot})}
+\right)^2,
+\quad
+\phi = \frac{CV_\gamma^2}{CV_\alpha^2}
+$$
 
 Compositional variability uses Hellinger composition:
 
-```text
-p_tij = X_tij / X_ti.
-z_tij = sqrt(p_tij)
-```
+$$
+z_{tij} = \sqrt{\frac{X_{tij}}{X_{ti\cdot}}},
+\quad
+z_{t\cdot j} =
+\sqrt{\frac{X_{t\cdot j}}{X_{t\cdot\cdot}}}
+$$
 
-Then:
+$$
+BD_\gamma^h =
+\sum_j \operatorname{Var}_t(z_{t\cdot j})
+$$
 
-```text
-BD_gamma^h = sum_j Var_t(z_t.j)
-BD_alpha^h = sum_i w_i sum_j Var_t(z_tij)
-BD_phi^h   = BD_gamma^h / BD_alpha^h
-BD_beta^h  = sum_t W_t sum_j Var_i(z_tij)
-```
+$$
+BD_\alpha^h =
+\sum_i
+\left(
+\frac{\operatorname{mean}_t(X_{ti\cdot})}
+{\sum_i \operatorname{mean}_t(X_{ti\cdot})}
+\right)
+\sum_j \operatorname{Var}_t(z_{tij})
+$$
+
+$$
+BD_\phi^h =
+\frac{BD_\gamma^h}{BD_\alpha^h}
+$$
+
+$$
+BD_\beta^h =
+\sum_t
+\left(
+\frac{X_{t\cdot\cdot}}
+{\sum_t X_{t\cdot\cdot}}
+\right)
+\sum_j \operatorname{Var}_i(z_{tij})
+$$
+
+## References
+
+Lamy, T. et al. 2021. The dual nature of metacommunity variability. *Oikos*
+130: 2078-2092. https://doi.org/10.1111/oik.08517
+
+Git repo: https://github.com/sokole/ltermetacommunities/tree/master/ltmc

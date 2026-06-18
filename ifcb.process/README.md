@@ -98,6 +98,21 @@ Clean data include:
 - CTD bottle merge
 - nutrient merge
 
+## Logging
+
+Each Python processing command records the workflow steps in timestamped files:
+
+```text
+<output-dir>/logs/<command>_YYYYMMDD_HHMMSS.out.log
+<output-dir>/logs/<command>_YYYYMMDD_HHMMSS.err.log
+```
+
+The `.out.log` file records messages at the selected level and above, while
+the `.err.log` file records errors. The same messages remain visible in the
+terminal. Use `--log-level DEBUG` for more detail or `--log-dir PATH` to place
+the files elsewhere. Each log begins with the resolved command-line inputs and
+paths used for that run; secret-like parameter names are automatically redacted.
+
 ## Optional Fill Product
 
 Use this only when an analysis needs balanced station coverage.

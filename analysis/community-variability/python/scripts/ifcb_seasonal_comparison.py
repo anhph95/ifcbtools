@@ -3,16 +3,18 @@
 from __future__ import annotations
 
 import argparse
+import logging
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from ifcb_common import SEASONS, default_results_dir
+from ifcb_common import SEASONS, add_logging_arguments, configure_workflow_logging, default_results_dir
 from community_variability import COMMUNITY_METRIC_ORDER, add_baseline_delta
 
 
 PLOT_VARS_SENSITIVITY = ["BD_gamma", "CV_gamma", "BD_phi", "CV_phi"]
+LOGGER = logging.getLogger(__name__)
 
 
 def parse_args() -> argparse.Namespace:
@@ -20,6 +22,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--results-dir", default=default_results_dir(), type=str)
     parser.add_argument("--seasons", nargs="+", default=SEASONS)
     parser.add_argument("--top-n-taxa", default=10, type=int)
+    add_logging_arguments(parser)
     return parser.parse_args()
 
 
@@ -85,8 +88,10 @@ def classify_taxon_effects(loo_taxon_all: pd.DataFrame, top_n_taxa: int) -> pd.D
 
 def main() -> int:
     args = parse_args()
+    configure_workflow_logging(args, "ifcb_seasonal_comparison")
     results_dir = Path(args.results_dir)
     seasons = list(args.seasons)
+    LOGGER.info("Starting seasonal comparison for seasons: %s", ", ".join(seasons))
 
     # Read bootstrap summaries and replicate-level metric tables.
     summary_all = read_seasonal_csv(results_dir, seasons, "summary")
@@ -129,6 +134,7 @@ def main() -> int:
     spavar_all["time_index"] = spavar_all["year"] + spavar_all["season_index"] / len(seasons)
     spavar_all.to_csv(results_dir / "spatial_variance_all_seasons.csv", index=False)
 
+    LOGGER.info("Seasonal comparison completed; outputs saved to: %s", results_dir)
     return 0
 
 

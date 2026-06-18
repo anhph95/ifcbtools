@@ -17,6 +17,12 @@ library(lubridate)
 library(readr)
 library(community.variability)
 source("R/scripts/ifcb_common.R")
+logger <- setup_workflow_logging("ifcb_sensitivity_analysis_R")
+logger$info("Starting R sensitivity-analysis workflow")
+options(error = function() {
+  error <- geterrmessage()
+  logger$error(simpleError(error))
+})
 ## ------------------------------------------------
 ## 1. Project settings
 ## ------------------------------------------------
@@ -40,6 +46,15 @@ main_cruise <- c(
   "EN727", "AR88", "AR92", "AR95",
   "AR99"
 )
+logger$config(list(
+  command = logger$command(commandArgs()),
+  working_directory = getwd(),
+  data_dir = normalizePath(data_dir, winslash = "/", mustWork = FALSE),
+  results_dir = normalizePath(results_dir, winslash = "/", mustWork = FALSE),
+  seasons = seasons,
+  station_list = station_list,
+  main_cruise = main_cruise
+))
 ## ------------------------------------------------
 ## 2. Load IFCB carbon data and taxonomy
 ## ------------------------------------------------
@@ -106,7 +121,7 @@ df_analysis <- df %>%
 ## as:
 ##   delta = metric_without_component - metric_baseline
 for (season_filter in seasons) {
-  message("Processing season: ", season_filter)
+  logger$info("Processing season: ", season_filter)
   ## Define one comparable seasonal metacommunity snapshot per year.
   ##
   ## For each year x station x cast, keep the shallowest sample so the
@@ -130,7 +145,7 @@ for (season_filter in seasons) {
     group_by(.data$year) %>%
     filter(n_distinct(.data$nearest_station) == length(station_list)) %>%
     ungroup()
-  message("Complete years retained: ", n_distinct(ds$year))
+  logger$info("Complete years retained: ", n_distinct(ds$year))
   community_wide <- ds %>%
     transmute(
       site = .data$nearest_station,
@@ -144,17 +159,19 @@ for (season_filter in seasons) {
   ## remove X[, , j]. Each result is compared with the full-array
   ## baseline for the same season.
   community_array <- make_community_array(community_wide, taxa_cols)
-  message("Leave-one-year")
+  logger$info("Running leave-one-year analysis")
   readr::write_csv(
     leave_one_out(community_array, margin = "timestep", show_progress = TRUE) %>%
       rename(year_removed = timestep_removed) %>%
       mutate(season = season_filter, .before = 1),
     file.path(results_dir, paste0("leave_one_year_out_", season_filter, ".csv"))
   )
-  message("Leave-one-taxon")
+  logger$info("Running leave-one-taxon analysis")
   readr::write_csv(
     leave_one_out(community_array, margin = "taxon", show_progress = TRUE) %>%
       mutate(season = season_filter, .before = 1),
     file.path(results_dir, paste0("leave_one_taxon_out_", season_filter, ".csv"))
   )
+  logger$info("Saved sensitivity outputs for ", season_filter)
 }
+logger$info("R sensitivity-analysis workflow completed")

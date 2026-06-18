@@ -3,11 +3,22 @@
 % Reads saved bootstrap, sensitivity, and spatial compositional variability
 % outputs, then writes cross-season summary CSVs used by plotting workflows.
 
+workflowName = "ifcb_seasonal_comparison_MATLAB";
 run("matlab/scripts/ifcb_common.m")
+fprintf("Starting MATLAB seasonal-comparison workflow\n");
+
+try
 
 communityMetricOrder = ["CV_gamma", "CV_alpha", "CV_phi", "BD_gamma", "BD_alpha", "BD_phi", "BD_beta"];
 plotVarsSensitivity = ["BD_gamma", "CV_gamma", "BD_phi", "CV_phi"];
 topNTaxa = 10;
+logRunConfiguration(struct( ...
+    "working_directory", pwd, ...
+    "results_dir", resultsDir, ...
+    "seasons", seasons, ...
+    "community_metric_order", communityMetricOrder, ...
+    "plot_variables_sensitivity", plotVarsSensitivity, ...
+    "top_n_taxa", topNTaxa));
 
 summaryAll = table();
 bootAll = table();
@@ -54,6 +65,17 @@ for idx = 1:numel(seasons)
     spavarAll = [spavarAll; s]; %#ok<AGROW>
 end
 writetable(spavarAll, fullfile(resultsDir, "spatial_variance_all_seasons.csv"));
+fprintf("MATLAB seasonal-comparison workflow completed\n");
+diary off
+catch ME
+    diary off
+    fid = fopen(errLogPath, "a");
+    fprintf(fid, "%s | ERROR | %s | %s\n", ...
+        string(datetime("now", "Format", "yyyy-MM-dd HH:mm:ss")), ...
+        workflowName, getReport(ME, "extended", "hyperlinks", "off"));
+    fclose(fid);
+    rethrow(ME)
+end
 
 function out = add_baseline_delta_local(dat, removedCol, groupCol)
 out = dat;

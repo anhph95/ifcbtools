@@ -3,17 +3,22 @@
 from __future__ import annotations
 
 import argparse
+import logging
 from pathlib import Path
 
 from ifcb_common import (
     SEASONS,
+    add_logging_arguments,
     build_community_array,
+    configure_workflow_logging,
     default_data_dir,
     default_results_dir,
     load_ifcb_carbon,
     select_season_metacommunity,
 )
 from community_variability import bootstrap_by_dimension, calc_spatial_bd_by_time
+
+LOGGER = logging.getLogger(__name__)
 
 
 def parse_args() -> argparse.Namespace:
@@ -24,21 +29,24 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seasons", nargs="+", default=SEASONS)
     parser.add_argument("--n-boot", default=1000, type=int)
     parser.add_argument("--seed", default=123, type=int)
+    add_logging_arguments(parser)
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
+    configure_workflow_logging(args, "ifcb_power_analysis")
     results_dir = Path(args.results_dir)
     results_dir.mkdir(parents=True, exist_ok=True)
+    LOGGER.info("Starting power analysis for seasons: %s", ", ".join(args.seasons))
 
     # Load once; each season applies the same balanced-metacommunity selection.
     df, taxa_cols = load_ifcb_carbon(Path(args.data_dir), data_version=args.data_version)
 
     for season in args.seasons:
-        print(f"Processing season: {season}")
+        LOGGER.info("Processing season: %s", season)
         ds = select_season_metacommunity(df, season)
-        print(f"Complete years retained: {ds['year'].nunique()}")
+        LOGGER.info("Complete years retained: %s", ds["year"].nunique())
 
         # Resample timesteps t: X*[t, i, j] = X[sampled t, i, j].
         community_array = build_community_array(ds, taxa_cols)
@@ -56,6 +64,7 @@ def main() -> int:
             index=False,
         )
 
+    LOGGER.info("Power analysis completed; outputs saved to: %s", results_dir)
     return 0
 
 

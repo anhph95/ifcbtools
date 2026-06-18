@@ -17,6 +17,12 @@ library(lubridate)
 library(readr)
 library(community.variability)
 source("R/scripts/ifcb_common.R")
+logger <- setup_workflow_logging("ifcb_power_analysis_R")
+logger$info("Starting R power-analysis workflow")
+options(error = function() {
+  error <- geterrmessage()
+  logger$error(simpleError(error))
+})
 ## ------------------------------------------------
 ## 1. Project settings
 ## ------------------------------------------------
@@ -47,6 +53,17 @@ main_cruise <- c(
   "EN727", "AR88", "AR92", "AR95",
   "AR99"
 )
+logger$config(list(
+  command = logger$command(commandArgs()),
+  working_directory = getwd(),
+  data_dir = normalizePath(data_dir, winslash = "/", mustWork = FALSE),
+  results_dir = normalizePath(results_dir, winslash = "/", mustWork = FALSE),
+  seasons = seasons,
+  n_boot = n_boot,
+  bootstrap_seed = bootstrap_seed,
+  station_list = station_list,
+  main_cruise = main_cruise
+))
 ## ------------------------------------------------
 ## 2. Load IFCB carbon data and taxonomy
 ## ------------------------------------------------
@@ -109,7 +126,7 @@ df_analysis <- df %>%
 ## seasonal differences reflect data and metric uncertainty rather than
 ## different preprocessing rules.
 for (season_filter in seasons) {
-  message("Processing season: ", season_filter)
+  logger$info("Processing season: ", season_filter)
   ## Define one comparable seasonal metacommunity snapshot per year.
   ##
   ## For each year x station x cast, keep the shallowest sample so the
@@ -133,7 +150,7 @@ for (season_filter in seasons) {
     group_by(.data$year) %>%
     filter(n_distinct(.data$nearest_station) == length(station_list)) %>%
     ungroup()
-  message("Complete years retained: ", n_distinct(ds$year))
+  logger$info("Complete years retained: ", n_distinct(ds$year))
   community_wide <- ds %>%
     transmute(
       site = .data$nearest_station,
@@ -166,4 +183,6 @@ for (season_filter in seasons) {
     calc_spatial_bd_by_time(community_array),
     file.path(results_dir, paste0("spatial_variance_", season_filter, ".csv"))
   )
+  logger$info("Saved bootstrap and spatial-variance outputs for ", season_filter)
 }
+logger$info("R power-analysis workflow completed")

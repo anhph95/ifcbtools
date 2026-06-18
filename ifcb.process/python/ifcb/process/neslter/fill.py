@@ -6,12 +6,14 @@ import argparse
 import logging
 import os
 from pathlib import Path
+import sys
 from typing import Iterable, Sequence
 
 import numpy as np
 import pandas as pd
 
 from .constants import DEFAULT_BOTTLE_URL_TEMPLATE, DEFAULT_DATASET
+from ifcb.process.logging_utils import log_run_configuration, redact_command_line, setup_logging
 
 LOGGER = logging.getLogger("ifcb.process.neslter")
 
@@ -430,16 +432,36 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--bottle-url-template", default=DEFAULT_BOTTLE_URL_TEMPLATE)
     parser.add_argument("--nutrient-source", default=DEFAULT_NUTRIENT_URL)
     parser.add_argument("--log-level", choices=["DEBUG", "INFO", "WARNING", "ERROR"], default="INFO")
+    parser.add_argument("--log-dir", default=None, help="Directory for timestamped workflow log files.")
     return parser.parse_args(argv)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
-    logging.basicConfig(level=getattr(logging, args.log_level), format="%(levelname)s: %(message)s")
     if args.input_data_path is None:
         input_dir = Path(__file__).resolve().parents[3] / "data" / args.dataset
     else:
         input_dir = Path(args.input_data_path)
+    output_dir = Path(args.output_dir) if args.output_dir is not None else input_dir
+    log_dir = Path(args.log_dir) if args.log_dir is not None else output_dir / "logs"
+    setup_logging(log_dir=log_dir, name="ifcb_fill_missing", level=getattr(logging, args.log_level))
+    LOGGER.info("Starting IFCB missing-cast fill for dataset %s", args.dataset)
+    log_run_configuration(
+        LOGGER,
+        {
+            "command": redact_command_line(sys.argv),
+            "dataset": args.dataset,
+            "input_dir": input_dir.resolve(),
+            "output_dir": output_dir.resolve(),
+            "data_type": args.data_type,
+            "input_stage": args.input_stage,
+            "output_stage": args.output_stage,
+            "bottle_url_template": args.bottle_url_template,
+            "nutrient_source": args.nutrient_source,
+            "log_level": args.log_level,
+            "log_dir": log_dir.resolve(),
+        },
+    )
 
     try:
         outputs = make_filled_dataset(
@@ -451,8 +473,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             bottle_url_template=args.bottle_url_template,
             nutrient_source=args.nutrient_source,
         )
-    except Exception as exc:
-        LOGGER.error("Fill failed: %s", exc)
+    except Exception:
+        LOGGER.exception("Fill failed")
         return 1
 
     LOGGER.info("Fill completed. Outputs: %s", ", ".join(str(path) for path in outputs))

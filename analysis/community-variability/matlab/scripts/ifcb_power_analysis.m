@@ -3,11 +3,25 @@
 % Bootstrap timesteps t in X(time, site, taxon), preserving the site x taxon
 % community matrix within each sampled year.
 
+workflowName = "ifcb_power_analysis_MATLAB";
 run("matlab/scripts/ifcb_common.m")
+fprintf("Starting MATLAB power-analysis workflow\n");
+
+try
 
 dataVersion = "fill";
 nBoot = 1000;
 bootstrapSeed = 123;
+logRunConfiguration(struct( ...
+    "working_directory", pwd, ...
+    "data_dir", dataDir, ...
+    "results_dir", resultsDir, ...
+    "data_version", dataVersion, ...
+    "seasons", seasons, ...
+    "n_boot", nBoot, ...
+    "bootstrap_seed", bootstrapSeed, ...
+    "station_list", stationList, ...
+    "main_cruise", mainCruise));
 
 [df, taxaCols] = load_ifcb_carbon_power_local(dataDir, dataVersion);
 for seasonFilter = seasons
@@ -21,6 +35,17 @@ for seasonFilter = seasons
     writetable(bootRes.boot, fullfile(resultsDir, "boot_" + seasonFilter + ".csv"));
     writetable(bootRes.summary, fullfile(resultsDir, "summary_" + seasonFilter + ".csv"));
     writetable(spatial_bd_by_time(communityArray), fullfile(resultsDir, "spatial_variance_" + seasonFilter + ".csv"));
+end
+fprintf("MATLAB power-analysis workflow completed\n");
+diary off
+catch ME
+    diary off
+    fid = fopen(errLogPath, "a");
+    fprintf(fid, "%s | ERROR | %s | %s\n", ...
+        string(datetime("now", "Format", "yyyy-MM-dd HH:mm:ss")), ...
+        workflowName, getReport(ME, "extended", "hyperlinks", "off"));
+    fclose(fid);
+    rethrow(ME)
 end
 
 function [df, taxaCols] = load_ifcb_carbon_power_local(dataDir, dataVersion)

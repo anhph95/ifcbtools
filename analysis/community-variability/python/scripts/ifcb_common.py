@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import argparse
+import logging
 from pathlib import Path
 import sys
 
@@ -9,10 +11,14 @@ import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 COMMUNITY_VARIABILITY_SRC = REPO_ROOT / "community.variability" / "python"
+IFCB_PROCESS_SRC = REPO_ROOT / "ifcb.process" / "python"
 if str(COMMUNITY_VARIABILITY_SRC) not in sys.path:
     sys.path.insert(0, str(COMMUNITY_VARIABILITY_SRC))
+if str(IFCB_PROCESS_SRC) not in sys.path:
+    sys.path.insert(0, str(IFCB_PROCESS_SRC))
 
 from community_variability import make_community_array
+from ifcb.process.logging_utils import log_run_configuration, redact_command_line, setup_logging
 
 
 SEASONS = ["JFM", "AMJ", "JAS", "OND"]
@@ -67,6 +73,27 @@ def default_data_dir() -> Path:
 def default_results_dir() -> Path:
     """Use the same results directory as the R analysis project."""
     return repo_root() / "analysis" / "community-variability" / "results"
+
+
+def add_logging_arguments(parser: argparse.ArgumentParser) -> None:
+    """Add consistent logging controls to an analysis workflow parser."""
+    parser.add_argument("--log-level", choices=["DEBUG", "INFO", "WARNING", "ERROR"], default="INFO")
+    parser.add_argument("--log-dir", default=None, help="Directory for timestamped workflow log files.")
+
+
+def configure_workflow_logging(args: argparse.Namespace, name: str) -> logging.Logger:
+    """Write workflow logs beside analysis results unless explicitly overridden."""
+    results_dir = Path(args.results_dir)
+    log_dir = Path(args.log_dir) if args.log_dir is not None else results_dir / "logs"
+    logger = setup_logging(log_dir=log_dir, name=name, level=getattr(logging, args.log_level))
+    settings = vars(args).copy()
+    settings["command"] = redact_command_line(sys.argv)
+    settings["results_dir"] = results_dir.resolve()
+    if "data_dir" in settings:
+        settings["data_dir"] = Path(settings["data_dir"]).resolve()
+    settings["log_dir"] = log_dir.resolve()
+    log_run_configuration(logger, settings)
+    return logger
 
 
 def load_ifcb_carbon(data_dir: Path, data_version: str = "fill") -> tuple[pd.DataFrame, list[str]]:

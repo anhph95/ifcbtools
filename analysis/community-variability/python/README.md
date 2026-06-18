@@ -27,3 +27,9 @@ python python/scripts/ifcb_seasonal_comparison.py
 The Python workflow mirrors the R computational outputs and writes CSV products
 for estimates, bootstrap summaries, sensitivity deltas, and seasonal comparison
 tables.
+
+Each script also writes timestamped `.out.log` and `.err.log` files under
+`<results-dir>/logs`. Use `--log-level DEBUG` for more detail or
+`--log-dir PATH` to choose another log directory; terminal logging remains
+enabled. Each log begins with the command-line arguments and resolved workflow
+paths; secret-like parameter names are automatically redacted.

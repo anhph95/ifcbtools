@@ -21,6 +21,12 @@ library(cowplot)
 library(grid)
 library(community.variability)
 source("R/scripts/ifcb_common.R")
+logger <- setup_workflow_logging("ifcb_seasonal_comparison_R")
+logger$info("Starting R seasonal-comparison workflow")
+options(error = function() {
+  error <- geterrmessage()
+  logger$error(simpleError(error))
+})
 ## ------------------------------------------------
 ## 1. Project settings
 ## ------------------------------------------------
@@ -49,6 +55,16 @@ taxon_effect_colors <- c(
   Negative = "blue",
   `Not significant` = "gray70"
 )
+logger$config(list(
+  command = logger$command(commandArgs()),
+  working_directory = getwd(),
+  results_dir = normalizePath(results_dir, winslash = "/", mustWork = FALSE),
+  seasons = seasons,
+  show_bootstrap = show_bootstrap,
+  point_alpha = point_alpha,
+  plot_top_n_taxa = plot_top_n_taxa,
+  n_top_taxa = n_top_taxa
+))
 ## ------------------------------------------------
 ## 2. Read bootstrap outputs
 ## ------------------------------------------------
@@ -879,3 +895,4 @@ ggsave(
   height = 7,
   dpi = 1200
 )
+logger$info("R seasonal-comparison workflow completed")

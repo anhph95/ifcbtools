@@ -3,9 +3,21 @@
 % Leave-one-year removes X(t, :, :). Leave-one-taxon removes X(:, :, j).
 % Metrics are recalculated after each removal and written for comparison.
 
+workflowName = "ifcb_sensitivity_analysis_MATLAB";
 run("matlab/scripts/ifcb_common.m")
+fprintf("Starting MATLAB sensitivity-analysis workflow\n");
+
+try
 
 dataVersion = "fill";
+logRunConfiguration(struct( ...
+    "working_directory", pwd, ...
+    "data_dir", dataDir, ...
+    "results_dir", resultsDir, ...
+    "data_version", dataVersion, ...
+    "seasons", seasons, ...
+    "station_list", stationList, ...
+    "main_cruise", mainCruise));
 [df, taxaCols] = load_ifcb_carbon_sensitivity_local(dataDir, dataVersion);
 for seasonFilter = seasons
     fprintf("Processing season: %s\n", seasonFilter);
@@ -22,6 +34,17 @@ for seasonFilter = seasons
     taxonOut.season = repmat(seasonFilter, height(taxonOut), 1);
     taxonOut = movevars(taxonOut, "season", "Before", 1);
     writetable(taxonOut, fullfile(resultsDir, "leave_one_taxon_out_" + seasonFilter + ".csv"));
+end
+fprintf("MATLAB sensitivity-analysis workflow completed\n");
+diary off
+catch ME
+    diary off
+    fid = fopen(errLogPath, "a");
+    fprintf(fid, "%s | ERROR | %s | %s\n", ...
+        string(datetime("now", "Format", "yyyy-MM-dd HH:mm:ss")), ...
+        workflowName, getReport(ME, "extended", "hyperlinks", "off"));
+    fclose(fid);
+    rethrow(ME)
 end
 
 function [df, taxaCols] = load_ifcb_carbon_sensitivity_local(dataDir, dataVersion)

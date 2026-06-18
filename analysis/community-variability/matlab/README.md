@@ -21,6 +21,17 @@ The MATLAB workflow reproduces the computational CSV outputs used by the R and
 Python analysis scripts. The R workflow remains the plotting-rich reference for
 publication-style figures.
 
+MATLAB command-window output and warnings are recorded with `diary` in
+timestamped `.out.log` files under:
+
+```text
+analysis/community-variability/results/logs/
+```
+
+Fatal exceptions are written with full reports to matching `.err.log` files.
+Each output log begins with the data paths and analysis settings used for that
+run.
+
 To fetch only the MATLAB analysis and metric code from Git:
 
 ```bash

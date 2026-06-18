@@ -47,10 +47,35 @@ if ~exist(baseDir, 'dir')
     mkdir(baseDir);
 end
 
+%% --- CONFIGURE WORKFLOW LOGGING ---
+
+logDir = fullfile(baseDir, 'logs');
+if ~exist(logDir, 'dir')
+    mkdir(logDir);
+end
+workflowName = "ifcb_export_MATLAB";
+logTimestamp = string(datetime("now", "Format", "yyyyMMdd_HHmmss"));
+outLogPath = fullfile(logDir, workflowName + "_" + logTimestamp + ".out.log");
+errLogPath = fullfile(logDir, workflowName + "_" + logTimestamp + ".err.log");
+fclose(fopen(errLogPath, "a"));
+diary(outLogPath);
+fprintf("%s | INFO | %s | Logging to: %s\n", ...
+    string(datetime("now", "Format", "yyyy-MM-dd HH:mm:ss")), workflowName, outLogPath);
+fprintf("%s | INFO | %s | Errors to: %s\n", ...
+    string(datetime("now", "Format", "yyyy-MM-dd HH:mm:ss")), workflowName, errLogPath);
+fprintf("Run configuration:\n");
+fprintf("  working_directory: %s\n", pwd);
+fprintf("  dataset: %s\n", dataset);
+fprintf("  summary_dir: %s\n", summaryDir);
+fprintf("  output_dir: %s\n", baseDir);
+fprintf("  input_files: %s\n", strjoin(string(fileList), ", "));
+fprintf("  log_dir: %s\n", logDir);
+
 savedMetadataAndClass = false;
 
 %% --- PROCESS EACH MAT FILE ---
 
+try
 for f = 1:length(fileList)
 
     fprintf('\n[%d/%d] Loading file: %s\n', f, length(fileList), fileList{f});
@@ -141,3 +166,13 @@ for f = 1:length(fileList)
 end
 
 fprintf('\nAll IFCB files processed successfully.\n');
+diary off
+catch ME
+    diary off
+    fid = fopen(errLogPath, "a");
+    fprintf(fid, "%s | ERROR | %s | %s\n", ...
+        string(datetime("now", "Format", "yyyy-MM-dd HH:mm:ss")), ...
+        workflowName, getReport(ME, "extended", "hyperlinks", "off"));
+    fclose(fid);
+    rethrow(ME)
+end

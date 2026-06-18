@@ -24,3 +24,49 @@ mainCruise = [
     "HRS2303", "EN706", "AR77", "EN712", "EN715", "EN720", "AE2426", ...
     "EN727", "AR88", "AR92", "AR95", "AR99"
 ];
+
+%% Shared dependency-free workflow logging
+%
+% The calling script defines workflowName before running this file. MATLAB's
+% diary records command-window output and warnings in the same results/logs
+% folder used by the Python and R analysis workflows.
+if ~exist("workflowName", "var")
+    workflowName = "ifcb_matlab";
+end
+logDir = fullfile(resultsDir, "logs");
+if ~exist(logDir, "dir")
+    mkdir(logDir);
+end
+logTimestamp = string(datetime("now", "Format", "yyyyMMdd_HHmmss"));
+outLogPath = fullfile(logDir, workflowName + "_" + logTimestamp + ".out.log");
+errLogPath = fullfile(logDir, workflowName + "_" + logTimestamp + ".err.log");
+fclose(fopen(errLogPath, "a"));
+diary(outLogPath);
+fprintf("%s | INFO | %s | Logging to: %s\n", ...
+    string(datetime("now", "Format", "yyyy-MM-dd HH:mm:ss")), workflowName, outLogPath);
+fprintf("%s | INFO | %s | Errors to: %s\n", ...
+    string(datetime("now", "Format", "yyyy-MM-dd HH:mm:ss")), workflowName, errLogPath);
+
+% logRunConfiguration writes user-controlled workflow settings in a uniform
+% block. Callers pass ordinary names and values after defining their options.
+logRunConfiguration = @log_run_configuration_local;
+
+function log_run_configuration_local(settings)
+secretTerms = ["password", "token", "secret", "api_key", "apikey"];
+fprintf("Run configuration:\n");
+names = fieldnames(settings);
+for idx = 1:numel(names)
+    name = names{idx};
+    value = settings.(name);
+    if any(contains(lower(string(name)), secretTerms))
+        text = "<redacted>";
+    elseif iscell(value)
+        text = strjoin(string(value), ", ");
+    elseif numel(value) > 1
+        text = strjoin(string(value), ", ");
+    else
+        text = string(value);
+    end
+    fprintf("  %s: %s\n", name, text);
+end
+end

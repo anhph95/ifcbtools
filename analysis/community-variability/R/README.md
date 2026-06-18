@@ -29,3 +29,13 @@ Rscript R/scripts/ifcb_seasonal_comparison.R
 ```
 
 The R scripts are the plotting-rich reference workflow for the analysis.
+
+Each workflow writes timestamped `.out.log` and `.err.log` files under:
+
+```text
+analysis/community-variability/results/logs/
+```
+
+Informational messages remain visible in the terminal. Fatal errors are also
+written to the error log with traceback information. Each output log records
+the workflow settings and paths used for that run.

@@ -4,11 +4,24 @@
 %   X(time, site, taxon)
 % and writes observed alpha-gamma-phi metric estimates plus composition data.
 
+workflowName = "ifcb_single_season_MATLAB";
 run("matlab/scripts/ifcb_common.m")
+fprintf("Starting MATLAB single-season workflow\n");
+
+try
 
 dataVersion = "fill";
 seasonFilter = "JAS";
 topTaxaPerStation = 3;
+logRunConfiguration(struct( ...
+    "working_directory", pwd, ...
+    "data_dir", dataDir, ...
+    "results_dir", resultsDir, ...
+    "data_version", dataVersion, ...
+    "season", seasonFilter, ...
+    "top_taxa_per_station", topTaxaPerStation, ...
+    "station_list", stationList, ...
+    "main_cruise", mainCruise));
 
 [df, taxaCols] = load_ifcb_carbon_local(dataDir, dataVersion);
 ds = select_season_metacommunity_local(df, seasonFilter, stationList, mainCruise);
@@ -26,6 +39,17 @@ dsWithMeta = add_metacommunity_rows_local(ds, taxaCols);
 topSpecies = dominant_taxa_by_station_local(ds, taxaCols, topTaxaPerStation);
 composition = prepare_composition_long_local(dsWithMeta, taxaCols, topSpecies);
 writetable(composition, fullfile(resultsDir, "composition_" + seasonFilter + ".csv"));
+fprintf("MATLAB single-season workflow completed\n");
+diary off
+catch ME
+    diary off
+    fid = fopen(errLogPath, "a");
+    fprintf(fid, "%s | ERROR | %s | %s\n", ...
+        string(datetime("now", "Format", "yyyy-MM-dd HH:mm:ss")), ...
+        workflowName, getReport(ME, "extended", "hyperlinks", "off"));
+    fclose(fid);
+    rethrow(ME)
+end
 
 function [df, taxaCols] = load_ifcb_carbon_local(dataDir, dataVersion)
 carbonPath = fullfile(dataDir, "ifcb_carbon_" + dataVersion + ".csv");

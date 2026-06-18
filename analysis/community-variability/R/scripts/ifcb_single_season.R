@@ -27,6 +27,12 @@ library(readr)
 # library(community.variability)
 source("R/scripts/ifcb_common.R")
 devtools::load_all(community_variability_r_dir)
+logger <- setup_workflow_logging("ifcb_single_season_R")
+logger$info("Starting R single-season workflow")
+options(error = function() {
+  error <- geterrmessage()
+  logger$error(simpleError(error))
+})
 ## ------------------------------------------------
 ## 1. Project settings
 ## ------------------------------------------------
@@ -65,6 +71,16 @@ site_colors <- c(
   setNames(okabe_ito[seq_along(station_list)], station_list),
   Metacommunity = "black"
 )
+logger$config(list(
+  command = logger$command(commandArgs()),
+  working_directory = getwd(),
+  data_dir = normalizePath(data_dir, winslash = "/", mustWork = FALSE),
+  results_dir = normalizePath(results_dir, winslash = "/", mustWork = FALSE),
+  season = season_filter,
+  station_list = station_list,
+  top_taxa_per_station = 3,
+  ctd_columns = ctd_cols
+))
 ## ------------------------------------------------
 ## 2. Load IFCB carbon data and taxonomy
 ## ------------------------------------------------
@@ -145,7 +161,7 @@ ds <- df %>%
   group_by(.data$year) %>%
   filter(n_distinct(.data$nearest_station) == length(station_list)) %>%
   ungroup()
-print(table(ds$year, ds$nearest_station))
+logger$output(table(ds$year, ds$nearest_station))
 ## ------------------------------------------------
 ## 4. Build community tables and calculate observed metrics
 ## ------------------------------------------------
@@ -163,11 +179,12 @@ community_wide <- ds %>%
   )
 community_array <- make_community_array(community_wide, taxa_cols)
 metrics <- calc_metacommunity_metrics(community_array)
-print(metrics)
+logger$output(metrics)
 readr::write_csv(
   wide_metric_table(metrics),
   file.path(results_dir, paste0("estimate_", season_filter, ".csv"))
 )
+logger$info("Saved metric estimates for ", season_filter)
 ## Plot the observed alpha-gamma-phi partition, excluding BD_beta
 ## because BD_beta is a time-weighted spatial summary rather than a
 ## Lamy et al. synchrony partition.
@@ -415,3 +432,4 @@ ggsave(
   height = 5.5,
   dpi = 300
 )
+logger$info("R single-season workflow completed")

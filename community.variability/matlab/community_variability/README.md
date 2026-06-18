@@ -12,16 +12,7 @@ X(time, site, taxon)
 You can pass either the numeric array directly or a struct returned by
 `make_community_array`, which keeps labels for `timestep`, `site`, and `taxon`.
 
-## Core Metrics
-
-```matlab
-addpath("community.variability/matlab/community_variability")
-
-metrics = calc_metacommunity_metrics(community);
-spatial = spatial_bd_by_time(community);
-```
-
-Available metric functions:
+## Available Functions
 
 ```text
 cv_gamma.m
@@ -42,14 +33,10 @@ leave_one_out.m
 add_baseline_delta.m
 ```
 
-## Equations
+## Metrics and Notation
 
-The MATLAB implementation uses the same notation as the top-level community
-variability documentation:
-
-$$
-X_{tij} = \text{biomass of taxon } j \text{ at time } t \text{ in site } i
-$$
+The core array convention is `X(time, site, taxon)`. Let `X_{tij}` be biomass
+of taxon `j` at time `t` in site `i`.
 
 $$
 X_{ti\cdot} = \sum_j X_{tij}, \quad
@@ -57,29 +44,31 @@ X_{t\cdot j} = \sum_i X_{tij}, \quad
 X_{t\cdot\cdot} = \sum_i \sum_j X_{tij}
 $$
 
-How this works in code:
-`make_community_array()` builds `X(time, site, taxon)`. Metric functions use
-MATLAB dimension reductions such as `sum`, `std`, `var`, and `mean` with
-`"omitnan"` so the code follows the equations directly.
-
-Aggregate variability uses total biomass:
+$$
+\mu_\gamma = \mathrm{mean}_t(X_{t\cdot\cdot}), \quad
+\sigma_\gamma = \mathrm{sd}_t(X_{t\cdot\cdot}), \quad
+\sigma_i = \mathrm{sd}_t(X_{ti\cdot})
+$$
 
 $$
-CV_\gamma^2 =
-\left(
-\frac{\mathrm{sd}_t(X_{t\cdot\cdot})}
-{\mathrm{mean}_t(X_{t\cdot\cdot})}
-\right)^2
+\mu_i = \mathrm{mean}_t(X_{ti\cdot}), \quad
+w_i = \frac{\mu_i}{\sum_i \mu_i}, \quad
+w_t = \frac{X_{t\cdot\cdot}}{\sum_t X_{t\cdot\cdot}}
 $$
 
 $$
 CV_\alpha^2 =
 \left(
-\frac{\sum_i \mathrm{sd}_t(X_{ti\cdot})}
-{\mathrm{mean}_t(X_{t\cdot\cdot})}
+\frac{\sum_i \sigma_i}{\mu_\gamma}
 \right)^2,
 \quad
-\phi = \frac{CV_\gamma^2}{CV_\alpha^2}
+CV_\gamma^2 =
+\left(
+\frac{\sigma_\gamma}{\mu_\gamma}
+\right)^2,
+\quad
+\phi =
+\frac{CV_\gamma^2}{CV_\alpha^2}
 $$
 
 Compositional variability uses Hellinger composition:
@@ -92,34 +81,70 @@ z_{t\cdot j} =
 $$
 
 $$
-BD_\gamma^h =
-\sum_j \mathrm{Var}_t(z_{t\cdot j})
+\sigma^2_{ij} = \mathrm{Var}_t(z_{tij}), \quad
+\sigma^2_{\gamma j} = \mathrm{Var}_t(z_{t\cdot j}), \quad
+\sigma^2_{tj} = \mathrm{Var}_i(z_{tij})
 $$
 
 $$
 BD_\alpha^h =
-\sum_i
-\left(
-\frac{\mathrm{mean}_t(X_{ti\cdot})}
-{\sum_i \mathrm{mean}_t(X_{ti\cdot})}
-\right)
-\sum_j \mathrm{Var}_t(z_{tij})
-$$
-
-$$
+\sum_i w_i \sum_j \sigma^2_{ij},
+\quad
+BD_\gamma^h =
+\sum_j \sigma^2_{\gamma j},
+\quad
 BD_\phi^h =
 \frac{BD_\gamma^h}{BD_\alpha^h}
 $$
 
 $$
 BD_\beta^h =
-\sum_t
-\left(
-\frac{X_{t\cdot\cdot}}
-{\sum_t X_{t\cdot\cdot}}
-\right)
-\sum_j \mathrm{Var}_i(z_{tij})
+\sum_t w_t \sum_j \sigma^2_{tj}
 $$
+
+In MATLAB, `make_community_array()` builds `X(time, site, taxon)`. Metric
+functions map directly to the equations with dimension reductions such as
+`sum`, `std`, `var`, and `mean` using `"omitnan"`, producing the `\mu`,
+`\sigma`, and `\sigma^2` terms.
+
+## Usage
+
+### Compute All Metrics Together
+
+Use this when you want the complete metric table with `CV_alpha`, `CV_gamma`,
+`CV_phi`, `BD_alpha`, `BD_gamma`, `BD_phi`, and `BD_beta`.
+
+```matlab
+addpath("community.variability/matlab/community_variability")
+
+community = make_community_array(data_wide, taxa_cols);
+metrics = calc_metacommunity_metrics(community);
+```
+
+`calc_metacommunity_metrics()` returns a table with one row per computed
+variable.
+
+### Compute One Metric at a Time
+
+Use this when you want a single computed variable or want to inspect the
+spatial component before it is summarized as `BD_beta`.
+
+```matlab
+cvAlpha = cv_alpha(community);
+cvGamma = cv_gamma(community);
+cvPhi = cv_phi(community);
+
+bdAlpha = bd_alpha(community);
+bdGamma = bd_gamma(community);
+bdPhi = bd_phi(community);
+bdBeta = bd_spatial_weighted(community);
+
+spatialByTime = spatial_bd_by_time(community);
+```
+
+The individual metric functions return scalar values. `spatial_bd_by_time()`
+returns one row per timestep with spatial compositional variability, biomass
+weights, and weighted contributions.
 
 ## References
 

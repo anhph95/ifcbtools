@@ -17,7 +17,9 @@ the IFCB taxon/class biomass dimension.
 The metrics follow Lamy et al. (2021). Let `X_{tij}` be biomass of taxon `j`
 at time `t` in local community `i`. Dots indicate summation over an axis, so
 `X_{ti\cdot}` is local aggregate biomass and `X_{t\cdot\cdot}` is
-metacommunity aggregate biomass.
+metacommunity aggregate biomass. The notation below uses `\mu` for temporal
+means, `\sigma` for temporal standard deviations, and `\sigma^2` for
+variance terms.
 
 ### `CV_alpha`: Local Aggregate Variability
 
@@ -26,24 +28,26 @@ scale. It describes how much total biomass fluctuates within sites before
 considering whether different sites fluctuate together.
 
 $$
+X_{ti\cdot} = \sum_j X_{tij},
+\quad
+\sigma_i = \mathrm{sd}_t(X_{ti\cdot}),
+\quad
+\mu_\gamma = \mathrm{mean}_t(X_{t\cdot\cdot})
+$$
+
+$$
 CV_\alpha^2 =
 \left(
-\frac{\sum_i \mathrm{sd}_t(X_{ti\cdot})}
-{\mathrm{mean}_t(X_{t\cdot\cdot})}
+\frac{\sum_i \sigma_i}
+{\mu_\gamma}
 \right)^2
 $$
 
-In code, aggregate local biomass is represented by summing the taxon dimension
-of `X[time, site, taxon]`:
-
-$$
-X_{ti\cdot} = \sum_j X_{tij}
-$$
-
-The site dimension is retained, so each site has its own biomass time series.
-The code calculates a temporal standard deviation for each site, sums those
-local standard deviations, and scales the result by mean total metacommunity
-biomass.
+In code, summing the taxon dimension of `X[time, site, taxon]` gives
+`X_{ti\cdot}` while retaining the site dimension. Each site therefore has its
+own biomass time series. The implementation computes `\sigma_i` for each site,
+sums those local standard deviations, and normalizes by `\mu_\gamma`, the mean
+metacommunity biomass.
 
 ### `CV_gamma`: Metacommunity Aggregate Variability
 
@@ -52,22 +56,25 @@ scale. It describes how much total biomass fluctuates after all local
 communities and taxa are pooled.
 
 $$
+X_{t\cdot\cdot} = \sum_i \sum_j X_{tij},
+\quad
+\mu_\gamma = \mathrm{mean}_t(X_{t\cdot\cdot}),
+\quad
+\sigma_\gamma = \mathrm{sd}_t(X_{t\cdot\cdot})
+$$
+
+$$
 CV_\gamma^2 =
 \left(
-\frac{\mathrm{sd}_t(X_{t\cdot\cdot})}
-{\mathrm{mean}_t(X_{t\cdot\cdot})}
+\frac{\sigma_\gamma}
+{\mu_\gamma}
 \right)^2
 $$
 
-In code, total metacommunity biomass is represented by summing both the site
-and taxon dimensions:
-
-$$
-X_{t\cdot\cdot} = \sum_i \sum_j X_{tij}
-$$
-
-This produces one regional biomass time series. `CV_gamma()` returns its
-squared temporal coefficient of variation.
+In code, summing both the site and taxon dimensions produces one
+metacommunity biomass time series, `X_{t\cdot\cdot}`. `CV_gamma()` computes
+its mean `\mu_\gamma`, standard deviation `\sigma_\gamma`, and squared
+coefficient of variation.
 
 ### `CV_phi`: Aggregate Synchrony
 
@@ -83,9 +90,10 @@ $$
 \phi = \frac{CV_\gamma^2}{CV_\alpha^2}
 $$
 
-In code, `CV_phi` is computed as the ratio of `CV_gamma` to `CV_alpha`. Both
-stored values are already squared coefficients of variation, so the ratio is
-the aggregate synchrony component of the temporal alpha-gamma partition.
+In code, `CV_phi` is computed as the ratio of the two stored aggregate
+variability values. Because `CV_alpha` and `CV_gamma` are both squared
+coefficients of variation, the ratio is the aggregate synchrony component of
+the temporal alpha-gamma partition.
 
 ### `BD_alpha`: Local Compositional Variability
 
@@ -94,8 +102,23 @@ It describes how much taxon composition changes through time within sites,
 after removing changes in total biomass.
 
 $$
+z_{tij} =
+\sqrt{\frac{X_{tij}}{X_{ti\cdot}}},
+\quad
+\sigma^2_{ij} = \mathrm{Var}_t(z_{tij})
+$$
+
+$$
 BD_i^h =
-\sum_j \mathrm{Var}_t(z_{tij})
+\sum_j \sigma^2_{ij}
+$$
+
+$$
+w_i =
+\frac{\mu_i}
+{\sum_i \mu_i},
+\quad
+\mu_i = \mathrm{mean}_t(X_{ti\cdot})
 $$
 
 $$
@@ -103,24 +126,12 @@ BD_\alpha^h =
 \sum_i w_i BD_i^h
 $$
 
-In code, each site-time taxon vector is converted to local relative biomass and
-then Hellinger composition:
-
-$$
-z_{tij} = \sqrt{\frac{X_{tij}}{X_{ti\cdot}}}
-$$
-
-For each site, the code calculates temporal variance in `z_{tij}` for every
-taxon and sums those taxon variances to obtain `BD_i^h`. Site values are then
-averaged using biomass weights,
-
-$$
-w_i =
-\frac{\mathrm{mean}_t(X_{ti\cdot})}
-{\sum_i \mathrm{mean}_t(X_{ti\cdot})}
-$$
-
-so sites with more biomass contribute more to `BD_alpha`.
+In code, local composition is represented by dividing each site-time taxon
+vector by its local biomass and applying the Hellinger square-root
+transformation. Temporal variance is then computed for each site-taxon
+trajectory as `\sigma^2_{ij}`. Summing across taxa gives site-level
+compositional variability, `BD_i^h`, and biomass weights `w_i` combine those
+site-level values into `BD_alpha`.
 
 ### `BD_gamma`: Metacommunity Compositional Variability
 
@@ -129,27 +140,24 @@ It describes how regional taxon composition changes through time after pooling
 local communities.
 
 $$
-BD_\gamma^h =
-\sum_j \mathrm{Var}_t(z_{t\cdot j})
-$$
-
-In code, each taxon is first summed across sites to produce regional taxon
-biomass:
-
-$$
-X_{t\cdot j} = \sum_i X_{tij}
-$$
-
-The regional taxon vector is then divided by total metacommunity biomass and
-Hellinger-transformed:
-
-$$
+X_{t\cdot j} = \sum_i X_{tij},
+\quad
 z_{t\cdot j} =
-\sqrt{\frac{X_{t\cdot j}}{X_{t\cdot\cdot}}}
+\sqrt{\frac{X_{t\cdot j}}{X_{t\cdot\cdot}}},
+\quad
+\sigma^2_{\gamma j} = \mathrm{Var}_t(z_{t\cdot j})
 $$
 
-`BD_gamma()` sums the temporal variances of these regional Hellinger taxon
-trajectories.
+$$
+BD_\gamma^h =
+\sum_j \sigma^2_{\gamma j}
+$$
+
+In code, each taxon is summed across sites to produce regional taxon biomass,
+then divided by total metacommunity biomass to form regional composition.
+`BD_gamma()` Hellinger-transforms that composition, computes temporal variance
+for each regional taxon trajectory as `\sigma^2_{\gamma j}`, and sums those
+variances across taxa.
 
 ### `BD_phi`: Compositional Synchrony
 
@@ -166,9 +174,9 @@ BD_\phi^h =
 \frac{BD_\gamma^h}{BD_\alpha^h}
 $$
 
-In code, `BD_phi` is computed as the ratio of `BD_gamma` to `BD_alpha`. The
-ratio is the compositional synchrony component of the temporal alpha-gamma
-partition.
+In code, `BD_phi` is computed as the ratio of the two temporal compositional
+variability values. The ratio is the compositional synchrony component of the
+temporal alpha-gamma partition.
 
 ### `BD_beta`: Local-Scale Spatial Compositional Variability
 
@@ -178,7 +186,9 @@ time, then summarizes that spatial variability through time.
 
 $$
 BD_t^h =
-\sum_j \mathrm{Var}_i(z_{tij})
+\sum_j \sigma^2_{tj},
+\quad
+\sigma^2_{tj} = \mathrm{Var}_i(z_{tij})
 $$
 
 $$
@@ -193,12 +203,11 @@ BD_\beta^h =
 $$
 
 In code, the same local Hellinger composition `z_{tij}` used for `BD_alpha` is
-used here, but the variance is taken across sites instead of across time. For
-each timestep, `spatial_bd_by_time()` calculates among-site variance for each
-taxon and sums those variances to obtain `BD_t^h`. `BD_spatial_weighted()`
-weights each `BD_t^h` by total metacommunity biomass at that timestep,
-`w_t = X_{t\cdot\cdot} / \sum_t X_{t\cdot\cdot}`, and returns the weighted
-sum reported as `BD_beta`.
+used here, but variance is computed across sites rather than through time. For
+each timestep, `spatial_bd_by_time()` computes `\sigma^2_{tj}` for each taxon
+and sums across taxa to obtain `BD_t^h`. `BD_spatial_weighted()` weights each
+`BD_t^h` by total metacommunity biomass at that timestep and returns the
+weighted sum reported as `BD_beta`.
 
 ## Install
 

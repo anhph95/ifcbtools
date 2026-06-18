@@ -18,14 +18,7 @@ From a local checkout:
 pip install -e community.variability/python
 ```
 
-## Use
-
-```python
-from community_variability import make_community_array, calc_metacommunity_metrics
-
-community = make_community_array(data_wide, taxa_cols)
-metrics = calc_metacommunity_metrics(community)
-```
+## Metrics and Notation
 
 The core array convention is:
 
@@ -33,14 +26,7 @@ The core array convention is:
 X[time, site, taxon]
 ```
 
-## Mathematical Notation
-
-The Python implementation uses the same notation as the top-level community
-variability documentation:
-
-$$
-X_{tij} = \text{biomass of taxon } j \text{ at time } t \text{ in site } i
-$$
+Let `X_{tij}` be biomass of taxon `j` at time `t` in site `i`.
 
 $$
 X_{ti\cdot} = \sum_j X_{tij}, \quad
@@ -48,28 +34,34 @@ X_{t\cdot j} = \sum_i X_{tij}, \quad
 X_{t\cdot\cdot} = \sum_i \sum_j X_{tij}
 $$
 
-How this works in code:
-`make_community_array()` builds `X[time, site, taxon]`. Metric functions use
-NumPy dimension reductions such as `np.nansum()`, `np.nanstd()`, and
-`np.nanvar()` so the code follows the equations directly.
+$$
+\mu_\gamma = \mathrm{mean}_t(X_{t\cdot\cdot}), \quad
+\sigma_\gamma = \mathrm{sd}_t(X_{t\cdot\cdot}), \quad
+\sigma_i = \mathrm{sd}_t(X_{ti\cdot})
+$$
 
 $$
-CV_\gamma^2 =
-\left(
-\frac{\mathrm{sd}_t(X_{t\cdot\cdot})}
-{\mathrm{mean}_t(X_{t\cdot\cdot})}
-\right)^2
+\mu_i = \mathrm{mean}_t(X_{ti\cdot}), \quad
+w_i = \frac{\mu_i}{\sum_i \mu_i}, \quad
+w_t = \frac{X_{t\cdot\cdot}}{\sum_t X_{t\cdot\cdot}}
 $$
 
 $$
 CV_\alpha^2 =
 \left(
-\frac{\sum_i \mathrm{sd}_t(X_{ti\cdot})}
-{\mathrm{mean}_t(X_{t\cdot\cdot})}
+\frac{\sum_i \sigma_i}{\mu_\gamma}
 \right)^2,
 \quad
-\phi = \frac{CV_\gamma^2}{CV_\alpha^2}
+CV_\gamma^2 =
+\left(
+\frac{\sigma_\gamma}{\mu_\gamma}
+\right)^2,
+\quad
+\phi =
+\frac{CV_\gamma^2}{CV_\alpha^2}
 $$
+
+Compositional variability uses Hellinger composition:
 
 $$
 z_{tij} = \sqrt{\frac{X_{tij}}{X_{ti\cdot}}},
@@ -79,34 +71,81 @@ z_{t\cdot j} =
 $$
 
 $$
-BD_\gamma^h =
-\sum_j \mathrm{Var}_t(z_{t\cdot j})
+\sigma^2_{ij} = \mathrm{Var}_t(z_{tij}), \quad
+\sigma^2_{\gamma j} = \mathrm{Var}_t(z_{t\cdot j}), \quad
+\sigma^2_{tj} = \mathrm{Var}_i(z_{tij})
 $$
 
 $$
 BD_\alpha^h =
-\sum_i
-\left(
-\frac{\mathrm{mean}_t(X_{ti\cdot})}
-{\sum_i \mathrm{mean}_t(X_{ti\cdot})}
-\right)
-\sum_j \mathrm{Var}_t(z_{tij})
-$$
-
-$$
+\sum_i w_i \sum_j \sigma^2_{ij},
+\quad
+BD_\gamma^h =
+\sum_j \sigma^2_{\gamma j},
+\quad
 BD_\phi^h =
 \frac{BD_\gamma^h}{BD_\alpha^h}
 $$
 
 $$
 BD_\beta^h =
-\sum_t
-\left(
-\frac{X_{t\cdot\cdot}}
-{\sum_t X_{t\cdot\cdot}}
-\right)
-\sum_j \mathrm{Var}_i(z_{tij})
+\sum_t w_t \sum_j \sigma^2_{tj}
 $$
+
+In Python, `make_community_array()` builds `X[time, site, taxon]`. Metric
+functions map directly to the equations with NumPy reductions: `np.nansum()`
+collapses selected dimensions, division forms relative biomass, and
+`np.nanstd()` or `np.nanvar()` produces the `\sigma` and `\sigma^2` terms.
+
+## Usage
+
+### Compute All Metrics Together
+
+Use this when you want the complete metric table with `CV_alpha`, `CV_gamma`,
+`CV_phi`, `BD_alpha`, `BD_gamma`, `BD_phi`, and `BD_beta`.
+
+```python
+from community_variability import make_community_array, calc_metacommunity_metrics
+
+community = make_community_array(data_wide, taxa_cols)
+metrics = calc_metacommunity_metrics(community)
+```
+
+`calc_metacommunity_metrics()` returns a long table with `varname` and
+`estimate` columns.
+
+### Compute One Metric at a Time
+
+Use this when you want a single computed variable or want to inspect the
+spatial component before it is summarized as `BD_beta`.
+
+```python
+from community_variability import (
+    bd_alpha,
+    bd_gamma,
+    bd_phi,
+    bd_spatial_weighted,
+    calc_spatial_bd_by_time,
+    cv_alpha,
+    cv_gamma,
+    cv_phi,
+)
+
+cv_alpha_value = cv_alpha(community)
+cv_gamma_value = cv_gamma(community)
+cv_phi_value = cv_phi(community)
+
+bd_alpha_value = bd_alpha(community)
+bd_gamma_value = bd_gamma(community)
+bd_phi_value = bd_phi(community)
+bd_beta_value = bd_spatial_weighted(community)
+
+spatial_by_time = calc_spatial_bd_by_time(community)
+```
+
+The individual metric functions return scalar values. `calc_spatial_bd_by_time()`
+returns one row per timestep with spatial compositional variability, biomass
+weights, and weighted contributions.
 
 ## Module Layout
 

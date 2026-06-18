@@ -15,3 +15,26 @@ analysis/community-variability/results/
 analysis/community-variability/ifcb_single_season_output/
 analysis/community-variability/results/tracking/
 data/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python tooling caches
+.mypy_cache/
+.ruff_cache/
+.pyright/
+.tox/
+.nox/
+.coverage.*
+coverage.xml
+
+# Local editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Generated project output
+/results/

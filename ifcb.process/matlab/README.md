@@ -11,20 +11,33 @@ should be created. Download the standalone script directly from GitHub:
 ```matlab
 scriptUrl = "https://raw.githubusercontent.com/anhph95/ifcbtools/main/ifcb.process/matlab/export_ifcb.m";
 websave("export_ifcb.m", scriptUrl);
-run("export_ifcb.m")
+export_ifcb()
 ```
 
-The script does not depend on the repository layout. Its editable user
-settings keep the NES-LTER server as the default source:
+The function does not depend on the repository layout. By default it processes
+`NESLTER_transect` from the server using:
+
+```text
+count_group_class_withTS.mat
+carbon_group_class_withTS.mat
+```
+
+Run another dataset without editing the function:
 
 ```matlab
-dataset = 'NESLTER_broadscale';
-summaryDir = fullfile('\\sosiknas1', 'IFCB_products', dataset, 'summary');
-outputDir = fullfile(pwd, 'data', dataset);
+export_ifcb("NESLTER_broadscale")
 ```
 
-Change `summaryDir` or `outputDir` directly when the source MAT products or
-destination are elsewhere. The script does not search for alternate paths.
+Override paths only when needed:
+
+```matlab
+export_ifcb("NESLTER_broadscale", ...
+    SummaryDir="path/to/summary", ...
+    OutputDir="path/to/output")
+```
+
+`CountMatFile` and `CarbonMatFile` can also override either standard filename.
+The function does not search for alternate paths.
 
 ## Expected Output
 

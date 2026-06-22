@@ -35,10 +35,10 @@ and run the standalone exporter:
 ```matlab
 scriptUrl = "https://raw.githubusercontent.com/anhph95/ifcbtools/main/ifcb.process/matlab/export_ifcb.m";
 websave("export_ifcb.m", scriptUrl);
-run("export_ifcb.m")
+export_ifcb()
 ```
 
-The default settings read from:
+By default, the exporter processes `NESLTER_transect`. It reads from:
 
 ```text
 \\sosiknas1\IFCB_products\<dataset>\summary
@@ -53,9 +53,15 @@ and write the required raw products under the active MATLAB workspace:
 <workdir>/data/<dataset>/ifcb_carbon_raw.csv
 ```
 
-Edit `dataset`, `summaryDir`, or `outputDir` in `export_ifcb.m` when the source
-or destination differs. The script does not assume a repository layout or
-search for alternate paths.
+Process a different dataset without editing the downloaded function:
+
+```matlab
+export_ifcb("NESLTER_broadscale")
+```
+
+The standard count and carbon MAT filenames remain the defaults. Override
+`SummaryDir`, `CountMatFile`, `CarbonMatFile`, or `OutputDir` only when needed.
+The function does not assume a repository layout or search alternate paths.
 
 ## Install Processing Package
 

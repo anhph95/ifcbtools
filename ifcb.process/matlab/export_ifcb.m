@@ -1,40 +1,63 @@
-% ========================================================================
-% IFCB MATLAB PRODUCT EXPORT
+function export_ifcb(dataset, options)
+%EXPORT_IFCB Export IFCB summary MAT products to processing CSV files.
 %
-% Export IFCB summary MAT products into CSV files used by the Python
-% data processing step.
+% export_ifcb()
+% export_ifcb("NESLTER_broadscale")
+% export_ifcb("NESLTER_broadscale", SummaryDir="path/to/summary")
+% export_ifcb("NESLTER_broadscale", ...
+%     CountMatFile="path/to/count.mat", ...
+%     CarbonMatFile="path/to/carbon.mat", ...
+%     OutputDir="path/to/output")
+%
+% Default MAT filenames:
+%   count_group_class_withTS.mat
+%   carbon_group_class_withTS.mat
 %
 % Outputs:
-%   - data/<dataset>/ifcb_class.csv
-%   - data/<dataset>/ifcb_metadata.csv
-%   - data/<dataset>/ifcb_count_raw.csv
-%   - data/<dataset>/ifcb_carbon_raw.csv
+%   <OutputDir>/ifcb_class.csv
+%   <OutputDir>/ifcb_metadata.csv
+%   <OutputDir>/ifcb_count_raw.csv
+%   <OutputDir>/ifcb_carbon_raw.csv
 %
 % Scientific data model:
 %   rows    = IFCB samples or sample-derived records
 %   columns = metadata fields or taxon/class biomass/count variables
-% ========================================================================
 
-%% --- USER SETTINGS ---
+arguments
+    dataset (1, 1) string = "NESLTER_transect"
+    options.SummaryDir (1, 1) string = ""
+    options.CountMatFile (1, 1) string = ""
+    options.CarbonMatFile (1, 1) string = ""
+    options.OutputDir (1, 1) string = ""
+end
 
-dataset = 'NESLTER_broadscale';
+%% --- RESOLVE INPUT AND OUTPUT PATHS ---
 
-% Default source location. Change summaryDir when the MAT products live
-% elsewhere; the export does not search for alternate input directories.
-summaryDir = fullfile( ...
-    '\\sosiknas1', ...
-    'IFCB_products', ...
-    dataset, ...
-    'summary');
+if strlength(options.SummaryDir) == 0
+    summaryDir = fullfile("\\sosiknas1", "IFCB_products", dataset, "summary");
+else
+    summaryDir = options.SummaryDir;
+end
 
-% Default destination under the current MATLAB working directory. Change
-% outputDir to write the CSV products somewhere else.
-outputDir = fullfile(pwd, 'data', dataset);
+if strlength(options.CountMatFile) == 0
+    countMatFile = fullfile(summaryDir, "count_group_class_withTS.mat");
+else
+    countMatFile = options.CountMatFile;
+end
 
-fileList = {
-    fullfile(summaryDir, 'count_group_class_withTS.mat')
-    fullfile(summaryDir, 'carbon_group_class_withTS.mat')
-};
+if strlength(options.CarbonMatFile) == 0
+    carbonMatFile = fullfile(summaryDir, "carbon_group_class_withTS.mat");
+else
+    carbonMatFile = options.CarbonMatFile;
+end
+
+if strlength(options.OutputDir) == 0
+    outputDir = fullfile(pwd, "data", dataset);
+else
+    outputDir = options.OutputDir;
+end
+
+fileList = {countMatFile, carbonMatFile};
 
 %% --- ENSURE OUTPUT DIRECTORY EXISTS ---
 
@@ -161,7 +184,7 @@ for f = 1:length(fileList)
     end
 end
 
-fprintf('\nAll IFCB files processed successfully.\n');
+fprintf('\nDataset %s processed successfully.\n', dataset);
 diary off
 catch ME
     diary off
@@ -171,4 +194,5 @@ catch ME
         workflowName, getReport(ME, "extended", "hyperlinks", "off"));
     fclose(fid);
     rethrow(ME)
+end
 end

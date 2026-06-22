@@ -41,21 +41,26 @@ standalone exporter:
 ```matlab
 scriptUrl = "https://raw.githubusercontent.com/anhph95/ifcbtools/main/ifcb.process/matlab/export_ifcb.m";
 websave("export_ifcb.m", scriptUrl);
-run("export_ifcb.m")
+export_ifcb()
 ```
 
-The default settings read from the NES-LTER server and write beneath the
-current MATLAB workspace:
+The default call processes `NESLTER_transect` from the server and writes
+beneath the current MATLAB workspace. The standard MAT filenames are:
+
+```text
+count_group_class_withTS.mat
+carbon_group_class_withTS.mat
+```
+
+Run another dataset without editing the function:
 
 ```matlab
-dataset = 'NESLTER_broadscale';
-summaryDir = fullfile('\\sosiknas1', 'IFCB_products', dataset, 'summary');
-outputDir = fullfile(pwd, 'data', dataset);
+export_ifcb("NESLTER_broadscale")
 ```
 
-Edit `summaryDir` or `outputDir` in the downloaded script when needed. The
-script makes no repository-location assumptions and does not search alternate
-paths.
+Override `SummaryDir`, `CountMatFile`, `CarbonMatFile`, or `OutputDir` only
+when needed. The function makes no repository-location assumptions and does
+not search alternate paths.
 
 ## Data Products
 

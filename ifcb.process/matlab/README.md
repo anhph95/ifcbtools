@@ -3,35 +3,35 @@
 This folder exports source IFCB MATLAB products to CSV files used by the Python
 processing package.
 
-## Run Export
+## Download and Run
 
-From MATLAB, run:
-
-```matlab
-run("ifcb.process/matlab/export_ifcb_mat.m")
-```
-
-To add this folder to the MATLAB path:
+Set MATLAB's current folder to the workspace where the `data/` directory
+should be created. Download the standalone script directly from GitHub:
 
 ```matlab
-run("ifcb.process/matlab/install_ifcb_process_export.m")
-install_ifcb_process_export(true)
+scriptUrl = "https://raw.githubusercontent.com/anhph95/ifcbtools/main/ifcb.process/matlab/export_ifcb_mat.m";
+websave("export_ifcb_mat.m", scriptUrl);
+run("export_ifcb_mat.m")
 ```
 
-## Fetch Only This Folder From Git
+The script does not depend on the repository layout. Its editable user
+settings keep the NES-LTER server as the default source:
 
-```bash
-git clone --filter=blob:none --sparse https://github.com/anhph95/ifcbtools.git
-cd ifcbtools
-git sparse-checkout set ifcb.process/matlab
+```matlab
+dataset = 'NESLTER_broadscale';
+summaryDir = fullfile('\\sosiknas1', 'IFCB_products', dataset, 'summary');
+outputDir = fullfile(pwd, 'data', dataset);
 ```
+
+Change `summaryDir` or `outputDir` directly when the source MAT products or
+destination are elsewhere. The script does not search for alternate paths.
 
 ## Expected Output
 
-The export writes local files under:
+By default, the export writes local files under the MATLAB working directory:
 
 ```text
-data/<dataset>/
+<workdir>/data/<dataset>/
 ```
 
 Command-window output is also written to a timestamped `.out.log`, and fatal

@@ -9,14 +9,6 @@ import sys
 
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parents[4]
-COMMUNITY_VARIABILITY_SRC = REPO_ROOT / "community.variability" / "python"
-IFCB_PROCESS_SRC = REPO_ROOT / "ifcb.process" / "python"
-if str(COMMUNITY_VARIABILITY_SRC) not in sys.path:
-    sys.path.insert(0, str(COMMUNITY_VARIABILITY_SRC))
-if str(IFCB_PROCESS_SRC) not in sys.path:
-    sys.path.insert(0, str(IFCB_PROCESS_SRC))
-
 from community_variability import make_community_array
 from ifcb.process.logging_utils import log_run_configuration, redact_command_line, setup_logging
 
@@ -60,19 +52,19 @@ MAIN_CRUISE = [
 ]
 
 
-def repo_root() -> Path:
-    """Return the repository root from analysis/community-variability/python/scripts."""
-    return REPO_ROOT
+def work_dir() -> Path:
+    """Return the current directory used for analysis inputs and outputs."""
+    return Path.cwd().resolve()
 
 
 def default_data_dir() -> Path:
-    """Use the repo-local transect data produced by the Python processing step."""
-    return repo_root() / "data" / "NESLTER_transect"
+    """Use transect data under the current analysis workspace."""
+    return work_dir() / "data" / "NESLTER_transect"
 
 
 def default_results_dir() -> Path:
-    """Use the same results directory as the R analysis project."""
-    return repo_root() / "analysis" / "community-variability" / "results"
+    """Write analysis products under the current analysis workspace."""
+    return work_dir() / "results"
 
 
 def add_logging_arguments(parser: argparse.ArgumentParser) -> None:
@@ -102,7 +94,7 @@ def load_ifcb_carbon(data_dir: Path, data_version: str = "fill") -> tuple[pd.Dat
         raise ValueError("data_version must be 'clean' or 'fill'.")
 
     carbon_path = data_dir / f"ifcb_carbon_{data_version}.csv"
-    taxonomy_path = data_dir / f"ifcb_taxonomy_{data_version}.csv" if data_version == "fill" else data_dir / "ifcb_taxonomy.csv"
+    taxonomy_path = data_dir / "ifcb_taxonomy.csv"
     if not carbon_path.exists():
         raise FileNotFoundError(
             f"Missing {carbon_path}. Run `ifcb-fill-missing {data_dir}` first, or use --data-version clean."

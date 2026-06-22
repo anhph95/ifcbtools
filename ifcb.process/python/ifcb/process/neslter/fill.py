@@ -7,7 +7,7 @@ import logging
 import os
 from pathlib import Path
 import sys
-from typing import Iterable, Sequence
+from typing import Iterable, Mapping, Sequence
 
 import numpy as np
 import pandas as pd
@@ -377,22 +377,27 @@ def make_filled_dataset(
     target_stations: Sequence[str] = DEFAULT_TARGET_STATIONS,
     bottle_url_template: str = DEFAULT_BOTTLE_URL_TEMPLATE,
     nutrient_source: str | os.PathLike[str] = DEFAULT_NUTRIENT_URL,
+    taxonomy_file: str | os.PathLike[str] = "ifcb_taxonomy.csv",
+    input_files: Mapping[str, str | os.PathLike[str]] | None = None,
+    output_files: Mapping[str, str | os.PathLike[str]] | None = None,
 ) -> list[Path]:
     """Create separate *_fill.csv files from clean IFCB files."""
     input_dir = Path(input_dir)
     output_dir = input_dir if output_dir is None else Path(output_dir)
-    taxonomy = pd.read_csv(input_dir / "ifcb_taxonomy.csv", low_memory=False)
+    taxonomy_path = input_dir / taxonomy_file
+    if not taxonomy_path.exists():
+        raise FileNotFoundError(f"Selected taxonomy file does not exist: {taxonomy_path}")
+    taxonomy = pd.read_csv(taxonomy_path, low_memory=False)
     taxonomy = add_taxonomy_label(taxonomy)
+    input_files = input_files or {}
+    output_files = output_files or {}
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    taxonomy_path = output_dir / f"ifcb_taxonomy_{output_stage}.csv"
-    taxonomy.to_csv(taxonomy_path, index=False)
-
-    outputs = [taxonomy_path]
+    outputs: list[Path] = []
     for data_type in data_types:
-        input_path = input_dir / f"ifcb_{data_type}_{input_stage}.csv"
+        input_path = input_dir / input_files.get(data_type, f"ifcb_{data_type}_{input_stage}.csv")
         if not input_path.exists():
-            raise FileNotFoundError(f"Missing clean input file: {input_path}")
+            raise FileNotFoundError(f"Selected {data_type} input file does not exist: {input_path}")
 
         LOGGER.info("Filling missing %s data from %s", data_type, input_path)
         df = pd.read_csv(input_path, low_memory=False)
@@ -410,7 +415,7 @@ def make_filled_dataset(
             new_rows = merge_nutrients(new_rows, nutrient_source=nutrient_source)
         df = pd.concat([existing_rows, new_rows], ignore_index=True)
 
-        output_path = output_dir / f"ifcb_{data_type}_{output_stage}.csv"
+        output_path = output_dir / output_files.get(data_type, f"ifcb_{data_type}_{output_stage}.csv")
         df.sort_values("sample_time").reset_index(drop=True).to_csv(output_path, index=False)
         outputs.append(output_path)
         LOGGER.info("Saved fill %s data to: %s (%s -> %s rows)", data_type, output_path, input_rows, len(df))
@@ -424,11 +429,16 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("input_data_path", nargs="?", default=None, help="Directory containing IFCB *_clean.csv files.")
-    parser.add_argument("--dataset", default=DEFAULT_DATASET, help="Dataset folder under repo-local data/.")
+    parser.add_argument("--dataset", default=DEFAULT_DATASET, help="Dataset folder under current-directory data/.")
     parser.add_argument("-o", "--output-dir", default=None, help="Directory for fill output CSVs.")
     parser.add_argument("--data-type", choices=["count", "carbon"], nargs="+", default=["count", "carbon"])
     parser.add_argument("--input-stage", default="clean")
     parser.add_argument("--output-stage", default="fill")
+    parser.add_argument("--taxonomy-file", default="ifcb_taxonomy.csv", help="Taxonomy input filename.")
+    parser.add_argument("--count-file", default=None, help="Count input filename; defaults from --input-stage.")
+    parser.add_argument("--carbon-file", default=None, help="Carbon input filename; defaults from --input-stage.")
+    parser.add_argument("--count-output-file", default=None, help="Count output filename; defaults from --output-stage.")
+    parser.add_argument("--carbon-output-file", default=None, help="Carbon output filename; defaults from --output-stage.")
     parser.add_argument("--bottle-url-template", default=DEFAULT_BOTTLE_URL_TEMPLATE)
     parser.add_argument("--nutrient-source", default=DEFAULT_NUTRIENT_URL)
     parser.add_argument("--log-level", choices=["DEBUG", "INFO", "WARNING", "ERROR"], default="INFO")
@@ -439,7 +449,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
     if args.input_data_path is None:
-        input_dir = Path(__file__).resolve().parents[3] / "data" / args.dataset
+        input_dir = Path.cwd().resolve() / "data" / args.dataset
     else:
         input_dir = Path(args.input_data_path)
     output_dir = Path(args.output_dir) if args.output_dir is not None else input_dir
@@ -456,6 +466,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             "data_type": args.data_type,
             "input_stage": args.input_stage,
             "output_stage": args.output_stage,
+            "taxonomy_file": args.taxonomy_file,
+            "count_file": args.count_file,
+            "carbon_file": args.carbon_file,
+            "count_output_file": args.count_output_file,
+            "carbon_output_file": args.carbon_output_file,
             "bottle_url_template": args.bottle_url_template,
             "nutrient_source": args.nutrient_source,
             "log_level": args.log_level,
@@ -472,6 +487,20 @@ def main(argv: Sequence[str] | None = None) -> int:
             output_stage=args.output_stage,
             bottle_url_template=args.bottle_url_template,
             nutrient_source=args.nutrient_source,
+            taxonomy_file=args.taxonomy_file,
+            input_files={
+                key: value
+                for key, value in {"count": args.count_file, "carbon": args.carbon_file}.items()
+                if value is not None
+            },
+            output_files={
+                key: value
+                for key, value in {
+                    "count": args.count_output_file,
+                    "carbon": args.carbon_output_file,
+                }.items()
+                if value is not None
+            },
         )
     except Exception:
         LOGGER.exception("Fill failed")

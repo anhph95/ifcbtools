@@ -28,7 +28,7 @@ def import_google_sheet(share_url: str, save_path: str | os.PathLike[str] | None
     taxonomic_levels = ["Phylum", "Class", "Order", "Family", "Genus", "Species"]
     present_levels = [col for col in taxonomic_levels if col in df.columns]
     if present_levels:
-        df["Mix_Taxa"] = df[present_levels].ffill(axis=1).iloc[:, -1]
+        df["Label"] = df[present_levels].ffill(axis=1).iloc[:, -1]
 
     if save_path is not None:
         save_path = Path(save_path)

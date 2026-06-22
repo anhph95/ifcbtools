@@ -50,8 +50,7 @@ end
 
 function [df, taxaCols] = load_ifcb_carbon_power_local(dataDir, dataVersion)
 carbonPath = fullfile(dataDir, "ifcb_carbon_" + dataVersion + ".csv");
-taxonomyPath = fullfile(dataDir, "ifcb_taxonomy_" + dataVersion + ".csv");
-if dataVersion == "clean"; taxonomyPath = fullfile(dataDir, "ifcb_taxonomy.csv"); end
+taxonomyPath = fullfile(dataDir, "ifcb_taxonomy.csv");
 df = readtable(carbonPath, "VariableNamingRule", "preserve");
 taxonomy = readtable(taxonomyPath, "VariableNamingRule", "preserve");
 taxonNameIdx = find(ismember(taxonomy.Properties.VariableNames, ["Label", "Annotations"]), 1);

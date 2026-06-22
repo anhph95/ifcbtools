@@ -5,14 +5,13 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Sequence
 
 import pandas as pd
 
 from .casts import aggregate_cast_data
 from .constants import (
     DEFAULT_BOTTLE_URL_TEMPLATE,
-    DEFAULT_DATASET,
     DEFAULT_STATION_REF_URL,
     DEFAULT_TAXONOMY_URL,
 )
@@ -25,71 +24,33 @@ from .taxonomy import import_google_sheet
 LOGGER = logging.getLogger("ifcb.process.neslter")
 
 
-def repo_root() -> Path:
-    """Return the repository root for an editable source checkout."""
-    return Path(__file__).resolve().parents[5]
-
-
-def matlab_export_data_dir(dataset: str = DEFAULT_DATASET) -> Path:
-    """Return the default data directory written by ifcb.process/matlab/export_ifcb_mat.m."""
-    return repo_root() / "data" / dataset
-
-
-def validate_required_files(input_dir: Path, required_files: Iterable[str]) -> None:
-    """Raise if any required file is missing."""
-    missing = [name for name in required_files if not (input_dir / name).exists()]
-    if missing:
-        raise FileNotFoundError(f"Missing required file(s) in {input_dir}: {missing}")
-
-
-def process_data_type(
-    input_dir: str | os.PathLike[str],
-    output_dir: str | os.PathLike[str],
-    data_type: str,
-    meta: pd.DataFrame,
-    data_cols: Sequence[str],
-    station_reference: str | os.PathLike[str] | None = DEFAULT_STATION_REF_URL,
-    max_station_distance_km: float | None = 2.0,
-    bottle_url_template: str = DEFAULT_BOTTLE_URL_TEMPLATE,
-    nutrient_source: str | os.PathLike[str] = DEFAULT_NUTRIENT_URL,
+def default_output_path(
+    input_file: str | os.PathLike[str],
+    *,
+    clean: bool = False,
+    add_station: bool = False,
+    merge_bottle_data: bool = False,
+    merge_nutrient: bool = False,
 ) -> Path:
-    """Process one raw IFCB data type through the clean pipeline and write CSV."""
-    input_dir = Path(input_dir)
-    output_dir = Path(output_dir)
-    output_path = output_dir / f"ifcb_{data_type}_clean.csv"
-
-    raw_path = input_dir / f"ifcb_{data_type}_raw.csv"
-    LOGGER.info("Processing %s data: %s", data_type, raw_path)
-    raw = pd.read_csv(raw_path)
-    LOGGER.info("Read %s raw rows and %s metadata rows", len(raw), len(meta))
-    raw_data_cols = [col for col in raw.columns if col in data_cols]
-    LOGGER.info("Detected %s %s taxon columns", len(raw_data_cols), data_type)
-
-    if "pid" not in meta.columns or "pid" not in raw.columns:
-        raise ValueError("Both metadata and raw data must contain a 'pid' column.")
-
-    df = pd.merge(meta, raw, on="pid", how="left")
-    LOGGER.info("Merged metadata and %s data: %s rows", data_type, len(df))
-    df = aggregate_cast_data(df, raw_data_cols)
-    df = normalize(df, raw_data_cols, data_type)
-    df = add_nearest_station(
-        df,
-        station_reference=station_reference,
-        max_station_distance_km=max_station_distance_km,
-    )
-    df = merge_bottle(df, bottle_url_template=bottle_url_template)
-    df = merge_nutrients(df, nutrient_source=nutrient_source)
-
-    output_dir.mkdir(parents=True, exist_ok=True)
-    df.to_csv(output_path, index=False)
-    LOGGER.info("Saved cleaned %s data to: %s", data_type, output_path)
-    return output_path
+    """Append selected operation suffixes to an input filename."""
+    input_path = Path(input_file)
+    suffixes = []
+    if clean:
+        suffixes.append("clean")
+    if add_station:
+        suffixes.append("station")
+    if merge_bottle_data:
+        suffixes.append("bottle")
+    if merge_nutrient:
+        suffixes.append("nutrient")
+    operation_suffix = "".join(f"_{suffix}" for suffix in suffixes)
+    return input_path.with_name(f"{input_path.stem}{operation_suffix}{input_path.suffix}")
 
 
 def process(
-    input_dir: str | os.PathLike[str] | None = None,
-    output_dir: str | os.PathLike[str] | None = None,
-    dataset: str = DEFAULT_DATASET,
+    input_file: str | os.PathLike[str],
+    output_file: str | os.PathLike[str] | None = None,
+    data_type: str | None = None,
     sample_type: Sequence[str] | None = None,
     download_taxonomy_if_missing: bool = True,
     taxonomy_url: str = DEFAULT_TAXONOMY_URL,
@@ -97,42 +58,59 @@ def process(
     max_station_distance_km: float | None = 2.0,
     bottle_url_template: str = DEFAULT_BOTTLE_URL_TEMPLATE,
     nutrient_source: str | os.PathLike[str] = DEFAULT_NUTRIENT_URL,
-    data_types: Sequence[str] = ("count", "carbon"),
-) -> list[Path]:
-    """Process MATLAB-exported IFCB CSV files for selected data types."""
-    input_dir = matlab_export_data_dir(dataset) if input_dir is None else Path(input_dir)
-    output_dir = Path(output_dir) if output_dir is not None else input_dir
-    taxonomy_path = input_dir / "ifcb_taxonomy.csv"
+    metadata_file: str | os.PathLike[str] | None = None,
+    taxonomy_file: str | os.PathLike[str] | None = None,
+    clean: bool = False,
+    add_station: bool = False,
+    merge_bottle_data: bool = False,
+    merge_nutrient: bool = False,
+) -> Path:
+    """Run selected cleaning and enrichment operations on one IFCB CSV file."""
+    input_path = Path(input_file)
+    output_path = (
+        Path(output_file)
+        if output_file is not None
+        else default_output_path(
+            input_path,
+            clean=clean,
+            add_station=add_station,
+            merge_bottle_data=merge_bottle_data,
+            merge_nutrient=merge_nutrient,
+        )
+    )
+    metadata_path = Path(metadata_file) if metadata_file is not None else input_path.parent / "ifcb_metadata.csv"
+    taxonomy_path = Path(taxonomy_file) if taxonomy_file is not None else input_path.parent / "ifcb_taxonomy.csv"
 
-    if not input_dir.exists():
-        raise FileNotFoundError(f"Input directory does not exist: {input_dir}")
+    if not input_path.exists():
+        raise FileNotFoundError(f"Input file does not exist: {input_path}")
 
-    if not taxonomy_path.exists() and download_taxonomy_if_missing:
-        import_google_sheet(taxonomy_url, save_path=taxonomy_path)
+    if not any((clean, add_station, merge_bottle_data, merge_nutrient)):
+        raise ValueError("At least one processing operation must be selected.")
 
-    required_files = ["ifcb_metadata.csv", "ifcb_taxonomy.csv"] + [
-        f"ifcb_{data_type}_raw.csv" for data_type in data_types
-    ]
-    validate_required_files(input_dir, required_files)
+    if clean:
+        if data_type not in {"count", "carbon"}:
+            raise ValueError("data_type must be 'count' or 'carbon' when clean=True.")
+        if not taxonomy_path.exists() and download_taxonomy_if_missing:
+            import_google_sheet(taxonomy_url, save_path=taxonomy_path)
 
-    LOGGER.info("Reading metadata: %s", input_dir / "ifcb_metadata.csv")
-    meta = pd.read_csv(input_dir / "ifcb_metadata.csv", low_memory=False)
-    meta = process_meta(meta, sample_type=sample_type)
-    LOGGER.info("Prepared metadata rows: %s", len(meta))
+        selected_inputs = [metadata_path, taxonomy_path]
+        missing = [path for path in selected_inputs if not path.exists()]
+        if missing:
+            raise FileNotFoundError(f"Selected input file(s) do not exist: {missing}")
 
-    tax = pd.read_csv(taxonomy_path)
-    if "Annotations" not in tax.columns:
-        raise ValueError("ifcb_taxonomy.csv must contain an 'Annotations' column.")
-    data_cols = tax["Annotations"].dropna().astype(str).tolist()
-    LOGGER.info("Loaded taxonomy annotations: %s", len(data_cols))
+        LOGGER.info("Reading metadata: %s", metadata_path)
+        meta = pd.read_csv(metadata_path, low_memory=False)
+        meta = process_meta(meta, sample_type=sample_type)
+        LOGGER.info("Prepared metadata rows: %s", len(meta))
 
-    outputs: list[Path] = []
-    station_lookup: pd.DataFrame | None = None
-    for data_type in data_types:
-        output_path = output_dir / f"ifcb_{data_type}_clean.csv"
-        raw_path = input_dir / f"ifcb_{data_type}_raw.csv"
-        LOGGER.info("Processing %s data: %s", data_type, raw_path)
-        raw = pd.read_csv(raw_path)
+        tax = pd.read_csv(taxonomy_path)
+        if "Annotations" not in tax.columns:
+            raise ValueError(f"{taxonomy_path} must contain an 'Annotations' column.")
+        data_cols = tax["Annotations"].dropna().astype(str).tolist()
+        LOGGER.info("Loaded taxonomy annotations: %s", len(data_cols))
+
+        LOGGER.info("Cleaning %s data: %s", data_type, input_path)
+        raw = pd.read_csv(input_path)
         LOGGER.info("Read %s raw rows and %s metadata rows", len(raw), len(meta))
         raw_data_cols = [col for col in raw.columns if col in data_cols]
         LOGGER.info("Detected %s %s taxon columns", len(raw_data_cols), data_type)
@@ -144,30 +122,22 @@ def process(
         LOGGER.info("Merged metadata and %s data: %s rows", data_type, len(df))
         df = aggregate_cast_data(df, raw_data_cols)
         df = normalize(df, raw_data_cols, data_type)
+    else:
+        LOGGER.info("Reading input: %s", input_path)
+        df = pd.read_csv(input_path, low_memory=False)
 
-        if station_lookup is not None and "pid" in df.columns and set(df["pid"]).issubset(set(station_lookup["pid"])):
-            df = df.drop(columns=["nearest_station", "station_distance"], errors="ignore").merge(
-                station_lookup,
-                on="pid",
-                how="left",
-                validate="many_to_one",
-            )
-            LOGGER.info("Reused station assignments for %s by pid: %s rows", data_type, df["nearest_station"].notna().sum())
-        else:
-            df = add_nearest_station(
-                df,
-                station_reference=station_reference,
-                max_station_distance_km=max_station_distance_km,
-            )
-            if "pid" in df.columns:
-                station_lookup = df[["pid", "nearest_station", "station_distance"]].drop_duplicates("pid")
-                LOGGER.info("Built station lookup by pid: %s rows", len(station_lookup))
-
+    if add_station:
+        df = add_nearest_station(
+            df,
+            station_reference=station_reference,
+            max_station_distance_km=max_station_distance_km,
+        )
+    if merge_bottle_data:
         df = merge_bottle(df, bottle_url_template=bottle_url_template)
+    if merge_nutrient:
         df = merge_nutrients(df, nutrient_source=nutrient_source)
-        output_dir.mkdir(parents=True, exist_ok=True)
-        df.to_csv(output_path, index=False)
-        LOGGER.info("Saved cleaned %s data to: %s", data_type, output_path)
-        outputs.append(output_path)
 
-    return outputs
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(output_path, index=False)
+    LOGGER.info("Saved processed data to: %s", output_path)
+    return output_path

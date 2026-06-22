@@ -19,37 +19,33 @@
 
 dataset = 'NESLTER_broadscale';
 
+% Default source location. Change summaryDir when the MAT products live
+% elsewhere; the export does not search for alternate input directories.
 summaryDir = fullfile( ...
     '\\sosiknas1', ...
     'IFCB_products', ...
     dataset, ...
     'summary');
 
+% Default destination under the current MATLAB working directory. Change
+% outputDir to write the CSV products somewhere else.
+outputDir = fullfile(pwd, 'data', dataset);
+
 fileList = {
     fullfile(summaryDir, 'count_group_class_withTS.mat')
     fullfile(summaryDir, 'carbon_group_class_withTS.mat')
 };
 
-%% --- REPOSITORY-RELATIVE OUTPUT SETTINGS ---
-
-% This file lives in:
-%   <repo>/ifcb.process/matlab/export_ifcb_mat.m
-%
-% Move two levels upward to recover <repo>, then write local exports to:
-%   <repo>/data/<dataset>/
-repoDir = fileparts(fileparts(fileparts(mfilename('fullpath'))));
-baseDir = fullfile(repoDir, 'data', dataset);
-
 %% --- ENSURE OUTPUT DIRECTORY EXISTS ---
 
-if ~exist(baseDir, 'dir')
-    fprintf('Creating output directory: %s\n', baseDir);
-    mkdir(baseDir);
+if ~exist(outputDir, 'dir')
+    fprintf('Creating output directory: %s\n', outputDir);
+    mkdir(outputDir);
 end
 
 %% --- CONFIGURE WORKFLOW LOGGING ---
 
-logDir = fullfile(baseDir, 'logs');
+logDir = fullfile(outputDir, 'logs');
 if ~exist(logDir, 'dir')
     mkdir(logDir);
 end
@@ -67,7 +63,7 @@ fprintf("Run configuration:\n");
 fprintf("  working_directory: %s\n", pwd);
 fprintf("  dataset: %s\n", dataset);
 fprintf("  summary_dir: %s\n", summaryDir);
-fprintf("  output_dir: %s\n", baseDir);
+fprintf("  output_dir: %s\n", outputDir);
 fprintf("  input_files: %s\n", strjoin(string(fileList), ", "));
 fprintf("  log_dir: %s\n", logDir);
 
@@ -128,12 +124,12 @@ for f = 1:length(fileList)
         end
 
         fprintf('Writing IFCB class table: %s\n', ...
-            fullfile(baseDir, 'ifcb_class.csv'));
-        writetable(classTable, fullfile(baseDir, 'ifcb_class.csv'));
+            fullfile(outputDir, 'ifcb_class.csv'));
+        writetable(classTable, fullfile(outputDir, 'ifcb_class.csv'));
 
         fprintf('Writing IFCB metadata table: %s\n', ...
-            fullfile(baseDir, 'ifcb_metadata.csv'));
-        writetable(loadedData.meta_data, fullfile(baseDir, 'ifcb_metadata.csv'));
+            fullfile(outputDir, 'ifcb_metadata.csv'));
+        writetable(loadedData.meta_data, fullfile(outputDir, 'ifcb_metadata.csv'));
 
         savedMetadataAndClass = true;
     end
@@ -144,7 +140,7 @@ for f = 1:length(fileList)
     %   N_{sample,class} = number of classified IFCB images/cells
     if isfield(loadedData, 'classcount_opt_adhoc_merge') && ...
             istable(loadedData.classcount_opt_adhoc_merge)
-        outFile = fullfile(baseDir, 'ifcb_count_raw.csv');
+        outFile = fullfile(outputDir, 'ifcb_count_raw.csv');
         fprintf('Saving raw cell count table: %s\n', outFile);
         writetable(loadedData.classcount_opt_adhoc_merge, outFile);
     else
@@ -157,7 +153,7 @@ for f = 1:length(fileList)
     %   C_{sample,class} = estimated carbon biomass for each IFCB class
     if isfield(loadedData, 'classC_opt_adhoc_merge') && ...
             istable(loadedData.classC_opt_adhoc_merge)
-        outFile = fullfile(baseDir, 'ifcb_carbon_raw.csv');
+        outFile = fullfile(outputDir, 'ifcb_carbon_raw.csv');
         fprintf('Saving raw carbon table: %s\n', outFile);
         writetable(loadedData.classC_opt_adhoc_merge, outFile);
     else

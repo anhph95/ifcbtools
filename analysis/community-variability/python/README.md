@@ -1,12 +1,28 @@
 # Python Analysis
 
-Run these scripts from `analysis/community-variability` or pass explicit
-`--data-dir` and `--results-dir` paths.
+The current directory is the analysis workspace, following the same movable
+workspace convention used by `stingraytools`. By default, the scripts read:
 
-Install the Python metric dependency directly from Git:
+```text
+<current-directory>/data/NESLTER_transect
+```
+
+and write results and logs under:
+
+```text
+<current-directory>/results
+```
+
+Run the scripts from the intended workspace, or pass explicit `--data-dir`,
+`--results-dir`, and `--log-dir` paths. Relative paths are resolved from the
+current directory.
+
+Install the Python metric and IFCB processing dependencies in the active
+project environment. For example:
 
 ```bash
 pip install "git+https://github.com/anhph95/ifcbtools.git#subdirectory=community.variability/python"
+pip install "git+https://github.com/anhph95/ifcbtools.git#subdirectory=ifcb.process"
 ```
 
 Fetch only the Python analysis workflow and metric package:
@@ -18,10 +34,10 @@ git sparse-checkout set analysis/community-variability/python community.variabil
 ```
 
 ```bash
-python python/scripts/ifcb_single_season.py --data-version fill
-python python/scripts/ifcb_power_analysis.py --data-version fill
-python python/scripts/ifcb_sensitivity_analysis.py --data-version fill
-python python/scripts/ifcb_seasonal_comparison.py
+python analysis/community-variability/python/scripts/ifcb_single_season.py --data-version fill
+python analysis/community-variability/python/scripts/ifcb_power_analysis.py --data-version fill
+python analysis/community-variability/python/scripts/ifcb_sensitivity_analysis.py --data-version fill
+python analysis/community-variability/python/scripts/ifcb_seasonal_comparison.py
 ```
 
 The Python workflow mirrors the R computational outputs and writes CSV products

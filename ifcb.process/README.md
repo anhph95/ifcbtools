@@ -35,26 +35,27 @@ ifcb-fill-missing
 
 ## MATLAB Export
 
-From MATLAB, run:
+Set MATLAB's current folder to your workspace, then download and run the
+standalone exporter:
 
 ```matlab
-run("ifcb.process/matlab/export_ifcb_mat.m")
+scriptUrl = "https://raw.githubusercontent.com/anhph95/ifcbtools/main/ifcb.process/matlab/export_ifcb_mat.m";
+websave("export_ifcb_mat.m", scriptUrl);
+run("export_ifcb_mat.m")
 ```
 
-To add the export folder to the MATLAB path:
+The default settings read from the NES-LTER server and write beneath the
+current MATLAB workspace:
 
 ```matlab
-run("ifcb.process/matlab/install_ifcb_process_export.m")
-install_ifcb_process_export(true)
+dataset = 'NESLTER_broadscale';
+summaryDir = fullfile('\\sosiknas1', 'IFCB_products', dataset, 'summary');
+outputDir = fullfile(pwd, 'data', dataset);
 ```
 
-To fetch only this package from Git:
-
-```bash
-git clone --filter=blob:none --sparse https://github.com/anhph95/ifcbtools.git
-cd ifcbtools
-git sparse-checkout set ifcb.process
-```
+Edit `summaryDir` or `outputDir` in the downloaded script when needed. The
+script makes no repository-location assumptions and does not search alternate
+paths.
 
 ## Data Products
 
@@ -62,34 +63,67 @@ The persisted processing products are:
 
 ```text
 *_raw.csv    # MATLAB-exported input
-*_clean.csv  # cleaned, station-assigned, bottle-merged, nutrient-merged
+*_clean.csv  # selected output; contents depend on the requested operations
 *_fill.csv   # optional fill product for balanced metacommunity analyses
 ```
 
-## Clean Processing
+## Processing Pipeline
+
+`ifcb-process` always processes one explicitly selected input CSV.
+
+Each pipeline operation is independently selectable and runs in the order
+shown below, regardless of flag order:
+
+```text
+--clean -> --add-station -> --merge-bottle -> --merge-nutrient
+```
+
+`--clean` is the main workflow. It reads one raw count or carbon CSV, filters
+and cleans metadata, aggregates cast replicates, and normalizes taxon values.
+Select the input type explicitly:
 
 ```bash
-ifcb-process --dataset NESLTER_broadscale
-ifcb-process data/NESLTER_transect
+ifcb-process data/NESLTER_transect/ifcb_count_raw.csv \
+  --clean \
+  --data-type count \
+  --add-station \
+  --merge-bottle \
+  --merge-nutrient
 ```
 
-Expected inputs in the dataset directory:
+To enrich an existing CSV without rerunning the clean workflow, omit
+`--clean`:
+
+```bash
+ifcb-process data/NESLTER_transect/ifcb_count_clean.csv --add-station
+ifcb-process data/NESLTER_transect/ifcb_count_clean.csv --merge-bottle --merge-nutrient
+```
+
+At least one processing operation must be selected.
+
+Unless `--output-file` is given, selected operation names are appended before
+the input extension:
 
 ```text
-ifcb_metadata.csv
-ifcb_taxonomy.csv
-ifcb_count_raw.csv
-ifcb_carbon_raw.csv
+sample.csv --clean                         -> sample_clean.csv
+sample.csv --add-station                   -> sample_station.csv
+sample.csv --clean --add-station           -> sample_clean_station.csv
+sample.csv --merge-bottle --merge-nutrient -> sample_bottle_nutrient.csv
 ```
 
-`ifcb-process` writes:
+During cleaning, `ifcb_metadata.csv` and `ifcb_taxonomy.csv` default to files
+beside the input CSV. Override either path when needed:
 
-```text
-ifcb_count_clean.csv
-ifcb_carbon_clean.csv
+```bash
+ifcb-process data/NESLTER_transect/counts.csv \
+  --clean \
+  --data-type count \
+  --metadata-file metadata.csv \
+  --taxonomy-file taxa.csv \
+  --output-file counts_processed.csv
 ```
 
-Clean data include:
+The complete pipeline includes:
 
 - metadata cleaning
 - cast replicate aggregation
@@ -121,13 +155,24 @@ Use this only when an analysis needs balanced station coverage.
 ifcb-fill-missing data/NESLTER_transect
 ```
 
-This reads `*_clean.csv`, creates missing `cast_from_udw` rows from same-cruise
+This reads the default `*_clean.csv` files, creates missing `cast_from_udw` rows from same-cruise
 underway samples, fills bottle/nutrient values only for the new rows, and writes:
 
 ```text
 ifcb_count_fill.csv
 ifcb_carbon_fill.csv
-ifcb_taxonomy_fill.csv
+```
+
+The taxonomy CSV is read to map annotations into `Label` groups but is not
+modified or copied. Input and output filenames can also be selected explicitly:
+
+```bash
+ifcb-fill-missing data/NESLTER_transect \
+  --taxonomy-file taxa.csv \
+  --count-file counts_cleaned.csv \
+  --carbon-file biomass_cleaned.csv \
+  --count-output-file counts_filled.csv \
+  --carbon-output-file biomass_filled.csv
 ```
 
 ## Useful Imports

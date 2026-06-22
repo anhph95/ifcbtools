@@ -54,7 +54,7 @@ Use fill data for balanced metacommunity analyses:
 
 ```text
 ifcb_carbon_fill.csv
-ifcb_taxonomy_fill.csv
+ifcb_taxonomy.csv
 ```
 
 ## R Workflows
@@ -98,7 +98,7 @@ Usage:
 
 ```bash
 Rscript R/scripts/ifcb_power_analysis.R
-python python/scripts/ifcb_power_analysis.py --data-version fill
+python analysis/community-variability/python/scripts/ifcb_power_analysis.py --data-version fill
 ```
 
 ```matlab
@@ -129,7 +129,7 @@ Usage:
 
 ```bash
 Rscript R/scripts/ifcb_sensitivity_analysis.R
-python python/scripts/ifcb_sensitivity_analysis.py --data-version fill
+python analysis/community-variability/python/scripts/ifcb_sensitivity_analysis.py --data-version fill
 ```
 
 ```matlab
@@ -161,7 +161,7 @@ Usage:
 
 ```bash
 Rscript R/scripts/ifcb_sensitivity_analysis.R
-python python/scripts/ifcb_sensitivity_analysis.py --data-version fill
+python analysis/community-variability/python/scripts/ifcb_sensitivity_analysis.py --data-version fill
 ```
 
 ```matlab
@@ -192,7 +192,7 @@ Usage:
 
 ```bash
 Rscript R/scripts/ifcb_seasonal_comparison.R
-python python/scripts/ifcb_seasonal_comparison.py
+python analysis/community-variability/python/scripts/ifcb_seasonal_comparison.py
 ```
 
 ```matlab
@@ -232,16 +232,16 @@ series.
 Use fill data by default:
 
 ```bash
-python python/scripts/ifcb_single_season.py --data-version fill
-python python/scripts/ifcb_power_analysis.py --data-version fill
-python python/scripts/ifcb_sensitivity_analysis.py --data-version fill
-python python/scripts/ifcb_seasonal_comparison.py
+python analysis/community-variability/python/scripts/ifcb_single_season.py --data-version fill
+python analysis/community-variability/python/scripts/ifcb_power_analysis.py --data-version fill
+python analysis/community-variability/python/scripts/ifcb_sensitivity_analysis.py --data-version fill
+python analysis/community-variability/python/scripts/ifcb_seasonal_comparison.py
 ```
 
 Use clean data explicitly:
 
 ```bash
-python python/scripts/ifcb_single_season.py --data-version clean
+python analysis/community-variability/python/scripts/ifcb_single_season.py --data-version clean
 ```
 
 ## MATLAB Workflows

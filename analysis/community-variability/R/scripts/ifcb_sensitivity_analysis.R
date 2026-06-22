@@ -69,7 +69,7 @@ df <- read.csv(
 colnames(df) <- gsub("\\.", " ", colnames(df))
 df$sample_time <- lubridate::ymd_hms(df$sample_time, tz = "UTC")
 taxonomy <- read.csv(
-  file.path(data_dir, "ifcb_taxonomy_mix.csv"),
+  file.path(data_dir, "ifcb_taxonomy.csv"),
   stringsAsFactors = FALSE
 )
 taxa_cols <- intersect(names(df), taxonomy$Label)

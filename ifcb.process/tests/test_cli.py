@@ -28,13 +28,21 @@ class ProcessCliTests(unittest.TestCase):
         self.assertFalse(args.merge_bottle)
         self.assertTrue(args.merge_nutrient)
 
-    def test_clean_requires_one_data_type(self) -> None:
-        """Require an explicit normalization type only for cleaning."""
-        with self.assertRaises(SystemExit):
-            parse_args(["input.csv", "--clean"])
+    def test_clean_accepts_explicit_input_without_data_type(self) -> None:
+        """Use the selected input directly without a redundant type flag."""
+        args = parse_args(["input.csv", "--clean"])
 
-        args = parse_args(["input.csv", "--clean", "--data-type", "count"])
-        self.assertEqual(args.data_type, "count")
+        self.assertTrue(args.clean)
+
+    def test_all_enables_every_operation(self) -> None:
+        """Expand --all into the complete processing pipeline."""
+        args = parse_args(["input.csv", "--all"])
+
+        self.assertTrue(args.all)
+        self.assertTrue(args.clean)
+        self.assertTrue(args.add_station)
+        self.assertTrue(args.merge_bottle)
+        self.assertTrue(args.merge_nutrient)
 
     def test_default_output_uses_operation_suffixes(self) -> None:
         """Build one cumulative output name in pipeline order."""

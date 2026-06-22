@@ -44,6 +44,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     )
     operations = parser.add_argument_group("processing operations")
     operations.add_argument(
+        "--all",
+        action="store_true",
+        help="Run clean, station assignment, bottle merge, and nutrient merge.",
+    )
+    operations.add_argument(
         "--clean",
         action="store_true",
         help="Clean raw IFCB data and create the output CSV.",
@@ -65,12 +70,6 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--sample-type", nargs="+", default=None, help="sample_type values to keep.")
     parser.add_argument(
-        "--data-type",
-        choices=["count", "carbon"],
-        default=None,
-        help="Input value type; required with --clean.",
-    )
-    parser.add_argument(
         "--download-taxonomy-if-missing",
         action="store_true",
         default=True,
@@ -91,10 +90,13 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--log-level", choices=["DEBUG", "INFO", "WARNING", "ERROR"], default="INFO")
     parser.add_argument("--log-dir", default=None, help="Directory for timestamped workflow log files.")
     args = parser.parse_args(argv)
-    if not any((args.clean, args.add_station, args.merge_bottle, args.merge_nutrient)):
-        parser.error("select at least one operation: --clean, --add-station, --merge-bottle, or --merge-nutrient")
-    if args.clean and args.data_type is None:
-        parser.error("--data-type {count,carbon} is required with --clean")
+    if not any((args.all, args.clean, args.add_station, args.merge_bottle, args.merge_nutrient)):
+        parser.error("select at least one operation: --all, --clean, --add-station, --merge-bottle, or --merge-nutrient")
+    if args.all:
+        args.clean = True
+        args.add_station = True
+        args.merge_bottle = True
+        args.merge_nutrient = True
     return args
 
 
@@ -104,6 +106,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     output_path = (
         Path(args.output_file)
         if args.output_file is not None
+        else input_path.with_name(f"{input_path.stem}_processed{input_path.suffix}")
+        if args.all
         else default_output_path(
             input_path,
             clean=args.clean,
@@ -125,7 +129,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "input_file": input_path.resolve(),
             "output_file": output_path.resolve(),
             "sample_type": args.sample_type,
-            "data_type": args.data_type,
+            "all": args.all,
             "metadata_file": metadata_path.resolve(),
             "taxonomy_file": taxonomy_path.resolve(),
             "clean": args.clean,
@@ -147,7 +151,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         output = process(
             input_file=input_path,
             output_file=output_path,
-            data_type=args.data_type,
             sample_type=args.sample_type,
             download_taxonomy_if_missing=args.download_taxonomy_if_missing,
             taxonomy_url=args.taxonomy_url,

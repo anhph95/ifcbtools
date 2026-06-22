@@ -83,14 +83,25 @@ shown below, regardless of flag order:
 --clean -> --add-station -> --merge-bottle -> --merge-nutrient
 ```
 
-`--clean` is the main workflow. It reads one raw count or carbon CSV, filters
-and cleans metadata, aggregates cast replicates, and normalizes taxon values.
-Select the input type explicitly:
+Run the complete pipeline with:
+
+```bash
+ifcb-process data/NESLTER_transect/ifcb_count_raw.csv --all
+```
+
+Unless `--output-file` is provided, `--all` writes:
+
+```text
+ifcb_count_raw.csv -> ifcb_count_raw_processed.csv
+```
+
+`--clean` is the main workflow. It reads the selected raw CSV, filters and
+cleans metadata, aggregates cast replicates, and normalizes taxon values to
+per-liter floating-point values:
 
 ```bash
 ifcb-process data/NESLTER_transect/ifcb_count_raw.csv \
   --clean \
-  --data-type count \
   --add-station \
   --merge-bottle \
   --merge-nutrient
@@ -114,6 +125,7 @@ sample.csv --clean                         -> sample_clean.csv
 sample.csv --add-station                   -> sample_station.csv
 sample.csv --clean --add-station           -> sample_clean_station.csv
 sample.csv --merge-bottle --merge-nutrient -> sample_bottle_nutrient.csv
+sample.csv --all                           -> sample_processed.csv
 ```
 
 During cleaning, `ifcb_metadata.csv` and `ifcb_taxonomy.csv` default to files
@@ -122,7 +134,6 @@ beside the input CSV. Override either path when needed:
 ```bash
 ifcb-process data/NESLTER_transect/counts.csv \
   --clean \
-  --data-type count \
   --metadata-file metadata.csv \
   --taxonomy-file taxa.csv \
   --output-file counts_processed.csv
@@ -157,27 +168,27 @@ paths used for that run; secret-like parameter names are automatically redacted.
 Use this only when an analysis needs balanced station coverage.
 
 ```bash
-ifcb-fill-missing data/NESLTER_transect
+ifcb-fill-missing data/NESLTER_transect/ifcb_carbon_clean.csv
 ```
 
-This reads the default `*_clean.csv` files, creates missing `cast_from_udw` rows from same-cruise
-underway samples, fills bottle/nutrient values only for the new rows, and writes:
+This reads one explicit input CSV, creates missing `cast_from_udw` rows from
+same-cruise underway samples, fills bottle/nutrient values only for the new
+rows, and writes by default:
 
 ```text
-ifcb_count_fill.csv
-ifcb_carbon_fill.csv
+ifcb_carbon_clean.csv -> ifcb_carbon_fill.csv
 ```
 
 The taxonomy CSV is read to map annotations into `Label` groups but is not
-modified or copied. Input and output filenames can also be selected explicitly:
+modified or copied. If `nearest_station` is absent, nearest stations are
+assigned automatically before filling.
+
+Input and output paths can also be selected explicitly:
 
 ```bash
-ifcb-fill-missing data/NESLTER_transect \
+ifcb-fill-missing data/NESLTER_transect/biomass_cleaned.csv \
   --taxonomy-file taxa.csv \
-  --count-file counts_cleaned.csv \
-  --carbon-file biomass_cleaned.csv \
-  --count-output-file counts_filled.csv \
-  --carbon-output-file biomass_filled.csv
+  --output-file biomass_filled.csv
 ```
 
 ## Useful Imports

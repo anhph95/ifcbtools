@@ -97,7 +97,8 @@ def load_ifcb_carbon(data_dir: Path, data_version: str = "fill") -> tuple[pd.Dat
     taxonomy_path = data_dir / "ifcb_taxonomy.csv"
     if not carbon_path.exists():
         raise FileNotFoundError(
-            f"Missing {carbon_path}. Run `ifcb-fill-missing {data_dir}` first, or use --data-version clean."
+            f"Missing {carbon_path}. Run `ifcb-fill-missing {data_dir / 'ifcb_carbon_clean.csv'}` first, "
+            "or use --data-version clean."
         )
     if not taxonomy_path.exists():
         raise FileNotFoundError(f"Missing taxonomy file: {taxonomy_path}")

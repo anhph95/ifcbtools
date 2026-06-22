@@ -45,6 +45,7 @@ class TaxonomyTests(unittest.TestCase):
             pd.DataFrame(
                 {
                     "sample_time": ["2020-01-01T00:00:00Z"],
+                    "nearest_station": ["L1"],
                     "taxon_a": [1],
                 }
             ).to_csv(data_dir / "ifcb_count_clean.csv", index=False)
@@ -61,10 +62,51 @@ class TaxonomyTests(unittest.TestCase):
                 ),
                 patch("ifcb.process.neslter.fill.fill_missing_casts_from_underway", side_effect=keep_rows),
             ):
-                outputs = make_filled_dataset(data_dir, data_types=["count"])
+                output = make_filled_dataset(data_dir / "ifcb_count_clean.csv")
 
-            self.assertEqual(outputs, [data_dir / "ifcb_count_fill.csv"])
+            self.assertEqual(output, data_dir / "ifcb_count_fill.csv")
             self.assertEqual(list(data_dir.glob("ifcb_taxonomy*.csv")), [data_dir / "ifcb_taxonomy.csv"])
+
+    def test_fill_assigns_station_when_column_is_absent(self) -> None:
+        """Invoke nearest-station assignment only when the input lacks the column."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            data_dir = Path(temp_dir)
+            pd.DataFrame(
+                {
+                    "Annotations": ["taxon_a"],
+                    "Phylum": ["Bacillariophyta"],
+                    "Label": ["Bacillariophyta"],
+                }
+            ).to_csv(data_dir / "ifcb_taxonomy.csv", index=False)
+            pd.DataFrame(
+                {
+                    "sample_time": ["2020-01-01T00:00:00Z"],
+                    "taxon_a": [1],
+                }
+            ).to_csv(data_dir / "sample.csv", index=False)
+
+            def add_station(df, **kwargs):
+                out = df.copy()
+                out["nearest_station"] = "L1"
+                return out
+
+            def keep_rows(df, **kwargs):
+                out = df.copy()
+                out["_fill_created"] = False
+                return out
+
+            with (
+                patch("ifcb.process.neslter.pipeline.add_nearest_station", side_effect=add_station) as assign,
+                patch(
+                    "ifcb.process.neslter.fill.map_taxa_to_label",
+                    side_effect=lambda df, taxonomy: (df, ["taxon_a"], taxonomy),
+                ),
+                patch("ifcb.process.neslter.fill.fill_missing_casts_from_underway", side_effect=keep_rows),
+            ):
+                output = make_filled_dataset(data_dir / "sample.csv")
+
+            assign.assert_called_once()
+            self.assertEqual(output, data_dir / "sample_fill.csv")
 
 
 if __name__ == "__main__":

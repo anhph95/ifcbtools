@@ -7,12 +7,12 @@ import logging
 import os
 from pathlib import Path
 import sys
-from typing import Iterable, Mapping, Sequence
+from typing import Iterable, Sequence
 
 import numpy as np
 import pandas as pd
 
-from .constants import DEFAULT_BOTTLE_URL_TEMPLATE, DEFAULT_DATASET
+from .constants import DEFAULT_BOTTLE_URL_TEMPLATE, DEFAULT_STATION_REF_URL
 from ifcb.process.logging_utils import log_run_configuration, redact_command_line, setup_logging
 
 LOGGER = logging.getLogger("ifcb.process.neslter")
@@ -369,76 +369,79 @@ def merge_nutrients(
 
 
 def make_filled_dataset(
-    input_dir: str | os.PathLike[str],
-    output_dir: str | os.PathLike[str] | None = None,
-    data_types: Sequence[str] = ("count", "carbon"),
-    input_stage: str = "clean",
-    output_stage: str = "fill",
+    input_file: str | os.PathLike[str],
+    output_file: str | os.PathLike[str] | None = None,
     target_stations: Sequence[str] = DEFAULT_TARGET_STATIONS,
+    station_reference: str | os.PathLike[str] | None = DEFAULT_STATION_REF_URL,
+    max_station_distance_km: float | None = 2.0,
     bottle_url_template: str = DEFAULT_BOTTLE_URL_TEMPLATE,
     nutrient_source: str | os.PathLike[str] = DEFAULT_NUTRIENT_URL,
-    taxonomy_file: str | os.PathLike[str] = "ifcb_taxonomy.csv",
-    input_files: Mapping[str, str | os.PathLike[str]] | None = None,
-    output_files: Mapping[str, str | os.PathLike[str]] | None = None,
-) -> list[Path]:
-    """Create separate *_fill.csv files from clean IFCB files."""
-    input_dir = Path(input_dir)
-    output_dir = input_dir if output_dir is None else Path(output_dir)
-    taxonomy_path = input_dir / taxonomy_file
+    taxonomy_file: str | os.PathLike[str] | None = None,
+) -> Path:
+    """Create one filled IFCB CSV from one explicitly selected input CSV."""
+    input_path = Path(input_file)
+    if output_file is None:
+        output_stem = input_path.stem[:-6] + "_fill" if input_path.stem.endswith("_clean") else input_path.stem + "_fill"
+        output_path = input_path.with_name(output_stem + input_path.suffix)
+    else:
+        output_path = Path(output_file)
+    taxonomy_path = Path(taxonomy_file) if taxonomy_file is not None else input_path.parent / "ifcb_taxonomy.csv"
+
+    if not input_path.exists():
+        raise FileNotFoundError(f"Selected input file does not exist: {input_path}")
     if not taxonomy_path.exists():
         raise FileNotFoundError(f"Selected taxonomy file does not exist: {taxonomy_path}")
+
     taxonomy = pd.read_csv(taxonomy_path, low_memory=False)
     taxonomy = add_taxonomy_label(taxonomy)
-    input_files = input_files or {}
-    output_files = output_files or {}
 
-    output_dir.mkdir(parents=True, exist_ok=True)
-    outputs: list[Path] = []
-    for data_type in data_types:
-        input_path = input_dir / input_files.get(data_type, f"ifcb_{data_type}_{input_stage}.csv")
-        if not input_path.exists():
-            raise FileNotFoundError(f"Selected {data_type} input file does not exist: {input_path}")
+    LOGGER.info("Filling missing data from %s", input_path)
+    df = pd.read_csv(input_path, low_memory=False)
+    input_rows = len(df)
+    if "nearest_station" not in df.columns:
+        from .pipeline import add_nearest_station
 
-        LOGGER.info("Filling missing %s data from %s", data_type, input_path)
-        df = pd.read_csv(input_path, low_memory=False)
-        input_rows = len(df)
-        df, _, taxonomy = map_taxa_to_label(df, taxonomy)
-        df = fill_missing_casts_from_underway(
+        LOGGER.info("nearest_station is absent; assigning nearest stations before filling")
+        df = add_nearest_station(
             df,
-            target_stations=target_stations,
-            mark_filled_col="_fill_created",
+            station_reference=station_reference,
+            max_station_distance_km=max_station_distance_km,
         )
-        new_rows = df.loc[df["_fill_created"]].drop(columns=["_fill_created"]).copy()
-        existing_rows = df.loc[~df["_fill_created"]].drop(columns=["_fill_created"]).copy()
-        if not new_rows.empty:
-            new_rows = fill_cast_from_udw_from_bottles(new_rows, bottle_url_template=bottle_url_template)
-            new_rows = merge_nutrients(new_rows, nutrient_source=nutrient_source)
-        df = pd.concat([existing_rows, new_rows], ignore_index=True)
 
-        output_path = output_dir / output_files.get(data_type, f"ifcb_{data_type}_{output_stage}.csv")
-        df.sort_values("sample_time").reset_index(drop=True).to_csv(output_path, index=False)
-        outputs.append(output_path)
-        LOGGER.info("Saved fill %s data to: %s (%s -> %s rows)", data_type, output_path, input_rows, len(df))
+    df, _, taxonomy = map_taxa_to_label(df, taxonomy)
+    df = fill_missing_casts_from_underway(
+        df,
+        target_stations=target_stations,
+        mark_filled_col="_fill_created",
+    )
+    new_rows = df.loc[df["_fill_created"]].drop(columns=["_fill_created"]).copy()
+    existing_rows = df.loc[~df["_fill_created"]].drop(columns=["_fill_created"]).copy()
+    if not new_rows.empty:
+        new_rows = fill_cast_from_udw_from_bottles(new_rows, bottle_url_template=bottle_url_template)
+        new_rows = merge_nutrients(new_rows, nutrient_source=nutrient_source)
+    df = pd.concat([existing_rows, new_rows], ignore_index=True)
 
-    return outputs
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    df.sort_values("sample_time").reset_index(drop=True).to_csv(output_path, index=False)
+    LOGGER.info("Saved fill data to: %s (%s -> %s rows)", output_path, input_rows, len(df))
+    return output_path
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Create separate IFCB *_fill.csv files from existing *_clean.csv files.",
+        description="Create one filled IFCB CSV from one explicitly selected input CSV.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("input_data_path", nargs="?", default=None, help="Directory containing IFCB *_clean.csv files.")
-    parser.add_argument("--dataset", default=DEFAULT_DATASET, help="Dataset folder under current-directory data/.")
-    parser.add_argument("-o", "--output-dir", default=None, help="Directory for fill output CSVs.")
-    parser.add_argument("--data-type", choices=["count", "carbon"], nargs="+", default=["count", "carbon"])
-    parser.add_argument("--input-stage", default="clean")
-    parser.add_argument("--output-stage", default="fill")
-    parser.add_argument("--taxonomy-file", default="ifcb_taxonomy.csv", help="Taxonomy input filename.")
-    parser.add_argument("--count-file", default=None, help="Count input filename; defaults from --input-stage.")
-    parser.add_argument("--carbon-file", default=None, help="Carbon input filename; defaults from --input-stage.")
-    parser.add_argument("--count-output-file", default=None, help="Count output filename; defaults from --output-stage.")
-    parser.add_argument("--carbon-output-file", default=None, help="Carbon output filename; defaults from --output-stage.")
+    parser.add_argument("input_file", help="Input IFCB CSV file.")
+    parser.add_argument("-o", "--output-file", default=None, help="Output CSV file; defaults to an _fill suffix.")
+    parser.add_argument(
+        "--taxonomy-file",
+        default=None,
+        help="Taxonomy input path; defaults to ifcb_taxonomy.csv beside the input file.",
+    )
+    parser.add_argument("--station-reference", default=None, help="Station reference CSV path.")
+    parser.add_argument("--max-station-distance-km", type=float, default=2.0)
+    parser.add_argument("--no-station-distance-limit", action="store_true")
     parser.add_argument("--bottle-url-template", default=DEFAULT_BOTTLE_URL_TEMPLATE)
     parser.add_argument("--nutrient-source", default=DEFAULT_NUTRIENT_URL)
     parser.add_argument("--log-level", choices=["DEBUG", "INFO", "WARNING", "ERROR"], default="INFO")
@@ -448,29 +451,26 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
-    if args.input_data_path is None:
-        input_dir = Path.cwd().resolve() / "data" / args.dataset
+    input_path = Path(args.input_file)
+    if args.output_file is None:
+        output_stem = input_path.stem[:-6] + "_fill" if input_path.stem.endswith("_clean") else input_path.stem + "_fill"
+        output_path = input_path.with_name(output_stem + input_path.suffix)
     else:
-        input_dir = Path(args.input_data_path)
-    output_dir = Path(args.output_dir) if args.output_dir is not None else input_dir
-    log_dir = Path(args.log_dir) if args.log_dir is not None else output_dir / "logs"
+        output_path = Path(args.output_file)
+    taxonomy_path = Path(args.taxonomy_file) if args.taxonomy_file is not None else input_path.parent / "ifcb_taxonomy.csv"
+    log_dir = Path(args.log_dir) if args.log_dir is not None else output_path.parent / "logs"
+    max_distance = None if args.no_station_distance_limit else args.max_station_distance_km
     setup_logging(log_dir=log_dir, name="ifcb_fill_missing", level=getattr(logging, args.log_level))
-    LOGGER.info("Starting IFCB missing-cast fill for dataset %s", args.dataset)
+    LOGGER.info("Starting IFCB missing-cast fill for %s", input_path)
     log_run_configuration(
         LOGGER,
         {
             "command": redact_command_line(sys.argv),
-            "dataset": args.dataset,
-            "input_dir": input_dir.resolve(),
-            "output_dir": output_dir.resolve(),
-            "data_type": args.data_type,
-            "input_stage": args.input_stage,
-            "output_stage": args.output_stage,
-            "taxonomy_file": args.taxonomy_file,
-            "count_file": args.count_file,
-            "carbon_file": args.carbon_file,
-            "count_output_file": args.count_output_file,
-            "carbon_output_file": args.carbon_output_file,
+            "input_file": input_path.resolve(),
+            "output_file": output_path.resolve(),
+            "taxonomy_file": taxonomy_path.resolve(),
+            "station_reference": args.station_reference,
+            "max_station_distance_km": max_distance,
             "bottle_url_template": args.bottle_url_template,
             "nutrient_source": args.nutrient_source,
             "log_level": args.log_level,
@@ -479,34 +479,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
 
     try:
-        outputs = make_filled_dataset(
-            input_dir=input_dir,
-            output_dir=args.output_dir,
-            data_types=args.data_type,
-            input_stage=args.input_stage,
-            output_stage=args.output_stage,
+        output = make_filled_dataset(
+            input_file=input_path,
+            output_file=output_path,
+            station_reference=args.station_reference,
+            max_station_distance_km=max_distance,
             bottle_url_template=args.bottle_url_template,
             nutrient_source=args.nutrient_source,
-            taxonomy_file=args.taxonomy_file,
-            input_files={
-                key: value
-                for key, value in {"count": args.count_file, "carbon": args.carbon_file}.items()
-                if value is not None
-            },
-            output_files={
-                key: value
-                for key, value in {
-                    "count": args.count_output_file,
-                    "carbon": args.carbon_output_file,
-                }.items()
-                if value is not None
-            },
+            taxonomy_file=taxonomy_path,
         )
     except Exception:
         LOGGER.exception("Fill failed")
         return 1
 
-    LOGGER.info("Fill completed. Outputs: %s", ", ".join(str(path) for path in outputs))
+    LOGGER.info("Fill completed. Output: %s", output)
     return 0
 
 

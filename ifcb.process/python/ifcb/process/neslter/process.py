@@ -50,7 +50,6 @@ def default_output_path(
 def process(
     input_file: str | os.PathLike[str],
     output_file: str | os.PathLike[str] | None = None,
-    data_type: str | None = None,
     sample_type: Sequence[str] | None = None,
     download_taxonomy_if_missing: bool = True,
     taxonomy_url: str = DEFAULT_TAXONOMY_URL,
@@ -88,8 +87,6 @@ def process(
         raise ValueError("At least one processing operation must be selected.")
 
     if clean:
-        if data_type not in {"count", "carbon"}:
-            raise ValueError("data_type must be 'count' or 'carbon' when clean=True.")
         if not taxonomy_path.exists() and download_taxonomy_if_missing:
             import_google_sheet(taxonomy_url, save_path=taxonomy_path)
 
@@ -109,19 +106,19 @@ def process(
         data_cols = tax["Annotations"].dropna().astype(str).tolist()
         LOGGER.info("Loaded taxonomy annotations: %s", len(data_cols))
 
-        LOGGER.info("Cleaning %s data: %s", data_type, input_path)
+        LOGGER.info("Cleaning data: %s", input_path)
         raw = pd.read_csv(input_path)
         LOGGER.info("Read %s raw rows and %s metadata rows", len(raw), len(meta))
         raw_data_cols = [col for col in raw.columns if col in data_cols]
-        LOGGER.info("Detected %s %s taxon columns", len(raw_data_cols), data_type)
+        LOGGER.info("Detected %s taxon columns", len(raw_data_cols))
 
         if "pid" not in meta.columns or "pid" not in raw.columns:
             raise ValueError("Both metadata and raw data must contain a 'pid' column.")
 
         df = pd.merge(meta, raw, on="pid", how="left")
-        LOGGER.info("Merged metadata and %s data: %s rows", data_type, len(df))
+        LOGGER.info("Merged metadata and data: %s rows", len(df))
         df = aggregate_cast_data(df, raw_data_cols)
-        df = normalize(df, raw_data_cols, data_type)
+        df = normalize(df, raw_data_cols)
     else:
         LOGGER.info("Reading input: %s", input_path)
         df = pd.read_csv(input_path, low_memory=False)

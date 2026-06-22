@@ -15,8 +15,8 @@ Create those files with the processing package:
 
 ```bash
 pip install "git+https://github.com/anhph95/ifcbtools.git#subdirectory=ifcb.process"
-ifcb-process --dataset NESLTER_transect
-ifcb-fill-missing data/NESLTER_transect
+ifcb-process data/NESLTER_transect/ifcb_carbon_raw.csv --clean
+ifcb-fill-missing data/NESLTER_transect/ifcb_carbon_clean.csv
 ```
 
 The analysis scripts use the separate community variability packages:

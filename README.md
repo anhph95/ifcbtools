@@ -26,6 +26,37 @@ ifcb.process MATLAB export -> ifcb.process Python clean -> optional fill -> comm
 - [Community variability](community.variability/README.md)
 - [Community variability analysis](analysis/community-variability/README.md)
 
+## Required MATLAB Export
+
+All downstream processing starts from CSV files exported from the IFCB MATLAB
+summary products. Set MATLAB's current folder to your workspace, then download
+and run the standalone exporter:
+
+```matlab
+scriptUrl = "https://raw.githubusercontent.com/anhph95/ifcbtools/main/ifcb.process/matlab/export_ifcb.m";
+websave("export_ifcb.m", scriptUrl);
+run("export_ifcb.m")
+```
+
+The default settings read from:
+
+```text
+\\sosiknas1\IFCB_products\<dataset>\summary
+```
+
+and write the required raw products under the active MATLAB workspace:
+
+```text
+<workdir>/data/<dataset>/ifcb_class.csv
+<workdir>/data/<dataset>/ifcb_metadata.csv
+<workdir>/data/<dataset>/ifcb_count_raw.csv
+<workdir>/data/<dataset>/ifcb_carbon_raw.csv
+```
+
+Edit `dataset`, `summaryDir`, or `outputDir` in `export_ifcb.m` when the source
+or destination differs. The script does not assume a repository layout or
+search for alternate paths.
+
 ## Install Processing Package
 
 From GitHub without manually cloning the repository:

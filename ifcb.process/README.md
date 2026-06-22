@@ -39,9 +39,9 @@ Set MATLAB's current folder to your workspace, then download and run the
 standalone exporter:
 
 ```matlab
-scriptUrl = "https://raw.githubusercontent.com/anhph95/ifcbtools/main/ifcb.process/matlab/export_ifcb_mat.m";
-websave("export_ifcb_mat.m", scriptUrl);
-run("export_ifcb_mat.m")
+scriptUrl = "https://raw.githubusercontent.com/anhph95/ifcbtools/main/ifcb.process/matlab/export_ifcb.m";
+websave("export_ifcb.m", scriptUrl);
+run("export_ifcb.m")
 ```
 
 The default settings read from the NES-LTER server and write beneath the

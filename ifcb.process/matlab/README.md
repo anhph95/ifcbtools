@@ -9,9 +9,9 @@ Set MATLAB's current folder to the workspace where the `data/` directory
 should be created. Download the standalone script directly from GitHub:
 
 ```matlab
-scriptUrl = "https://raw.githubusercontent.com/anhph95/ifcbtools/main/ifcb.process/matlab/export_ifcb_mat.m";
-websave("export_ifcb_mat.m", scriptUrl);
-run("export_ifcb_mat.m")
+scriptUrl = "https://raw.githubusercontent.com/anhph95/ifcbtools/main/ifcb.process/matlab/export_ifcb.m";
+websave("export_ifcb.m", scriptUrl);
+run("export_ifcb.m")
 ```
 
 The script does not depend on the repository layout. Its editable user

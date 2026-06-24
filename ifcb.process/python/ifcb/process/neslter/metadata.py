@@ -7,6 +7,8 @@ from typing import Sequence
 import numpy as np
 import pandas as pd
 
+DEFAULT_SAMPLE_TYPES = ("cast", "underway", "underway_discrete")
+
 
 def process_meta(meta: pd.DataFrame, sample_type: Sequence[str] | None = None) -> pd.DataFrame:
     """Clean and enrich IFCB metadata."""
@@ -16,13 +18,12 @@ def process_meta(meta: pd.DataFrame, sample_type: Sequence[str] | None = None) -
     if missing:
         raise ValueError(f"metadata missing required columns: {missing}")
 
-    if sample_type:
-        meta = meta.loc[(meta["skip"] == 0) & (meta["sample_type"].isin(sample_type))].copy()
-    else:
-        meta = meta.loc[meta["skip"] == 0].copy()
+    selected_sample_types = tuple(sample_type) if sample_type else DEFAULT_SAMPLE_TYPES
+    meta = meta.loc[(meta["skip"] == 0) & (meta["sample_type"].isin(selected_sample_types))].copy()
+    meta.loc[meta["sample_type"] == "underway_discrete", "sample_type"] = "underway"
 
     meta["depth"] = pd.to_numeric(meta["depth"], errors="coerce")
-    mask = meta["sample_type"].isin(["underway", "underway_discrete", "bucket"])
+    mask = meta["sample_type"].isin(["underway", "bucket"])
     meta.loc[mask, "depth"] = meta.loc[mask, "depth"].fillna(0)
 
     meta["ml_analyzed"] = pd.to_numeric(meta["ml_analyzed"], errors="coerce").replace(0, np.nan)

@@ -68,7 +68,15 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Merge nutrient fields into the output CSV.",
     )
-    parser.add_argument("--sample-type", nargs="+", default=None, help="sample_type values to keep.")
+    parser.add_argument(
+        "--sample-type",
+        nargs="+",
+        default=None,
+        help=(
+            "Metadata sample_type values to keep during --clean. "
+            "Defaults to cast, underway, and underway_discrete; underway_discrete is written as underway."
+        ),
+    )
     parser.add_argument(
         "--download-taxonomy-if-missing",
         action="store_true",

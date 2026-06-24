@@ -95,7 +95,7 @@ Unless `--output-file` is provided, `--all` writes:
 ifcb_count.csv -> ifcb_count_clean_station_bottle_nutrient.csv
 ```
 
-`--clean` is the main workflow. It reads the selected MATLAB-exported CSV, filters and
+`--clean` is the main workflow. It reads the selected MATLAB-exported CSV,
 cleans metadata, aggregates cast replicates, and normalizes taxon values to
 per-liter floating-point values:
 
@@ -139,14 +139,41 @@ ifcb-process data/NESLTER_transect/counts.csv \
   --output-file counts_clean.csv
 ```
 
-The complete pipeline includes:
+The `--clean` operation runs these steps in order:
 
-- metadata cleaning
-- cast replicate aggregation
-- count/carbon normalization
-- nearest station assignment
-- CTD bottle merge
-- nutrient merge
+1. Read `ifcb_metadata.csv`.
+2. Require metadata columns `skip`, `sample_type`, `depth`, `ml_analyzed`,
+   `longitude`, `latitude`, and `sample_time`.
+3. Keep only rows where `skip == 0`.
+4. Keep only `sample_type` values `cast`, `underway`, and
+   `underway_discrete`. Override this set with `--sample-type`.
+5. Rewrite `sample_type == "underway_discrete"` to `sample_type == "underway"`.
+6. Convert `depth`, `ml_analyzed`, `longitude`, and `latitude` to numeric
+   values.
+7. For `underway` rows, fill missing `depth` with `0`.
+8. Replace `ml_analyzed == 0` with missing.
+9. Drop rows missing `sample_time`, `longitude`, `latitude`, or
+   `ml_analyzed`.
+10. Parse `sample_time` as a timestamp and drop rows with unparseable times.
+11. Add `year`, `month`, `day`, ISO `week`, day-of-year `doy`, and seasonal
+    quarter `season`.
+12. Add empty `nearest_station` and `station_distance` columns for later
+    station assignment.
+13. Read `ifcb_taxonomy.csv` and use its `Annotations` column to select taxon
+    columns from the count or carbon input table.
+14. Merge cleaned metadata and the selected count or carbon table by `pid`.
+15. Aggregate `cast` replicate rows by `cruise`, `cast`, and `depth`.
+    Taxon columns, `ml_analyzed`, and `n_images` are summed; `sample_time` is
+    the earliest replicate time; other metadata fields keep one unique value
+    or join multiple unique values.
+16. Normalize each selected taxon column to per-liter units:
+    `normalized_value = raw_value / ml_analyzed * 1000`.
+
+After `--clean`, the optional pipeline steps run in this order when selected:
+
+1. `--add-station` assigns nearest-station fields.
+2. `--merge-bottle` merges CTD bottle fields.
+3. `--merge-nutrient` merges nutrient fields.
 
 ## Logging
 

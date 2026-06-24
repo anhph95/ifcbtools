@@ -1,7 +1,8 @@
 # Python Analysis
 
-The current directory is the analysis workspace, following the same movable
-workspace convention used by `stingraytools`. By default, the scripts read:
+Open Python in the directory where you want to run the analysis. The downloaded
+scripts use that current working directory as the analysis workspace. By
+default, the scripts read:
 
 ```text
 <current-directory>/data/NESLTER_transect
@@ -23,32 +24,41 @@ Run the scripts from the intended workspace, or pass explicit `--data-dir`,
 `--results-dir`, and `--log-dir` paths. Relative paths are resolved from the
 current directory.
 
-Install the Python metric and IFCB processing dependencies in the active
-project environment. For example:
+Install the Python metric and IFCB processing dependencies separately in the
+active project environment.
 
-```bash
-pip install "git+https://github.com/anhph95/ifcbtools.git#subdirectory=community.variability/python"
-pip install "git+https://github.com/anhph95/ifcbtools.git#subdirectory=ifcb.process"
+Download the Python analysis scripts into the current working directory:
+
+```python
+import urllib.request
+
+exec(
+    urllib.request.urlopen(
+        "https://raw.githubusercontent.com/anhph95/ifcbtools/main/analysis/community-variability/python/install_analysis_scripts.py"
+    )
+    .read()
+    .decode("utf-8")
+)
 ```
 
-Copy only the Python analysis workflow:
+To replace existing copies, run:
 
-```bash
-git clone --filter=blob:none --sparse https://github.com/anhph95/ifcbtools.git
-cd ifcbtools
-git sparse-checkout set analysis/community-variability/python
+```python
+import urllib.request
+
+IFCB_ANALYSIS_OVERWRITE = True
+exec(
+    urllib.request.urlopen(
+        "https://raw.githubusercontent.com/anhph95/ifcbtools/main/analysis/community-variability/python/install_analysis_scripts.py"
+    )
+    .read()
+    .decode("utf-8")
+)
 ```
 
-```bash
-python analysis/community-variability/python/scripts/ifcb_single_season.py
-python analysis/community-variability/python/scripts/ifcb_power_analysis.py
-python analysis/community-variability/python/scripts/ifcb_sensitivity_analysis.py
-python analysis/community-variability/python/scripts/ifcb_seasonal_comparison.py
-```
-
-The Python workflow mirrors the R computational outputs and writes CSV products
-for estimates, bootstrap summaries, sensitivity deltas, and seasonal comparison
-tables.
+Open the copied scripts and build on them. Keep `ifcb_common.py` in the same
+directory as the analysis scripts because each script imports it with
+`from ifcb_common import ...`.
 
 Each script also writes timestamped `.out.log` and `.err.log` files under
 `<current-directory>/logs`. Use `--log-level DEBUG` for more detail or

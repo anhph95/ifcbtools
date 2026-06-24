@@ -122,13 +122,11 @@ run("community.variability/matlab/install_community_variability.m")
 install_community_variability(true)
 ```
 
-## Fetch Analysis Only
+## Copy Editable Analysis Scripts
 
-Install the metric package separately, then use Git sparse checkout only to
-copy the analysis workflow:
+Install the metric package separately, then copy editable starter scripts from
+inside R, Python, or MATLAB. See the language-specific analysis READMEs:
 
-```bash
-git clone --filter=blob:none --sparse https://github.com/anhph95/ifcbtools.git
-cd ifcbtools
-git sparse-checkout set analysis/community-variability
-```
+- [R analysis](analysis/community-variability/R/README.md)
+- [Python analysis](analysis/community-variability/python/README.md)
+- [MATLAB analysis](analysis/community-variability/matlab/README.md)

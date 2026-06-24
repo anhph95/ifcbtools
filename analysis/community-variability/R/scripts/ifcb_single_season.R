@@ -24,7 +24,7 @@ library(ggrepel)
 library(grid)
 library(readr)
 library(community.variability)
-source("R/scripts/ifcb_common.R")
+source("ifcb_common.R")
 logger <- setup_workflow_logging("ifcb_single_season_R")
 logger$info("Starting R single-season workflow")
 options(error = function() {

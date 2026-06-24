@@ -4,7 +4,7 @@
 % community matrix within each sampled year.
 
 workflowName = "ifcb_power_analysis_MATLAB";
-run("matlab/scripts/ifcb_common.m")
+run("ifcb_common.m")
 fprintf("Starting MATLAB power-analysis workflow\n");
 
 try

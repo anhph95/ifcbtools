@@ -20,7 +20,7 @@ library(ggplot2)
 library(cowplot)
 library(grid)
 library(community.variability)
-source("R/scripts/ifcb_common.R")
+source("ifcb_common.R")
 logger <- setup_workflow_logging("ifcb_seasonal_comparison_R")
 logger$info("Starting R seasonal-comparison workflow")
 options(error = function() {

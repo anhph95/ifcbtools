@@ -5,7 +5,7 @@
 % and writes observed alpha-gamma-phi metric estimates plus composition data.
 
 workflowName = "ifcb_single_season_MATLAB";
-run("matlab/scripts/ifcb_common.m")
+run("ifcb_common.m")
 fprintf("Starting MATLAB single-season workflow\n");
 
 try

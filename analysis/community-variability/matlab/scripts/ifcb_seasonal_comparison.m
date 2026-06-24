@@ -4,7 +4,7 @@
 % outputs, then writes cross-season summary CSVs used by plotting workflows.
 
 workflowName = "ifcb_seasonal_comparison_MATLAB";
-run("matlab/scripts/ifcb_common.m")
+run("ifcb_common.m")
 fprintf("Starting MATLAB seasonal-comparison workflow\n");
 
 try

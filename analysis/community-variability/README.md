@@ -26,23 +26,18 @@ pip install "git+https://github.com/anhph95/ifcbtools.git#subdirectory=community
 ```
 
 ```r
+if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
 remotes::install_git(
   "https://github.com/anhph95/ifcbtools.git",
   subdir = "community.variability/R/community.variability"
 )
 ```
 
-## Fetch Only This Analysis
+## Copy Editable Analysis Scripts
 
 The analysis folder is workflow code rather than an installable package.
-Install the metric package separately, then use Git only to copy the analysis
-source:
-
-```bash
-git clone --filter=blob:none --sparse https://github.com/anhph95/ifcbtools.git
-cd ifcbtools
-git sparse-checkout set analysis/community-variability
-```
+Install the metric package separately, then copy the editable starter scripts
+from inside R, Python, or MATLAB using the sections below.
 
 Use clean data for observed-sample analyses:
 
@@ -60,14 +55,47 @@ ifcb_taxonomy.csv
 
 ## R Workflows
 
-From this directory:
+Open R or RStudio in the directory where you want to run the analysis, then
+download the R analysis scripts into that current working directory:
 
-```bash
-Rscript R/scripts/ifcb_single_season.R
-Rscript R/scripts/ifcb_power_analysis.R
-Rscript R/scripts/ifcb_sensitivity_analysis.R
-Rscript R/scripts/ifcb_seasonal_comparison.R
+```r
+source("https://raw.githubusercontent.com/anhph95/ifcbtools/main/analysis/community-variability/R/install_analysis_scripts.R")
 ```
+
+Keep `ifcb_common.R` beside the copied scripts, put inputs under
+`data/NESLTER_transect`, and run the scripts interactively.
+
+## Python Workflows
+
+Open Python in the directory where you want to run the analysis, then download
+the Python analysis scripts into that current working directory:
+
+```python
+import urllib.request
+
+exec(
+    urllib.request.urlopen(
+        "https://raw.githubusercontent.com/anhph95/ifcbtools/main/analysis/community-variability/python/install_analysis_scripts.py"
+    )
+    .read()
+    .decode("utf-8")
+)
+```
+
+Keep `ifcb_common.py` beside the copied scripts, put inputs under
+`data/NESLTER_transect`, and build on the scripts in that directory.
+
+## MATLAB Workflows
+
+Open MATLAB in the folder where you want to run the analysis, then download the
+MATLAB analysis scripts into that current folder:
+
+```matlab
+eval(webread("https://raw.githubusercontent.com/anhph95/ifcbtools/main/analysis/community-variability/matlab/install_analysis_scripts.m"))
+```
+
+Keep `ifcb_common.m` beside the copied scripts, put inputs under
+`data/NESLTER_transect`, and build on the scripts in that folder.
 
 ## Statistical Workflows
 
@@ -97,14 +125,14 @@ summarizes 95% intervals from bootstrap quantiles.
 
 Usage:
 
-```bash
-Rscript R/scripts/ifcb_power_analysis.R
-python analysis/community-variability/python/scripts/ifcb_power_analysis.py
-```
+For R, open the copied `ifcb_power_analysis.R` file in the analysis working
+directory and run it interactively.
 
-```matlab
-run("matlab/scripts/ifcb_power_analysis.m")
-```
+For Python, open or import the copied `ifcb_power_analysis.py` file from the
+analysis working directory.
+
+For MATLAB, open or run the copied `ifcb_power_analysis.m` file from the
+analysis working folder.
 
 ### Leave-One-Year Sensitivity
 
@@ -128,14 +156,14 @@ from baseline.
 
 Usage:
 
-```bash
-Rscript R/scripts/ifcb_sensitivity_analysis.R
-python analysis/community-variability/python/scripts/ifcb_sensitivity_analysis.py
-```
+For R, open the copied `ifcb_sensitivity_analysis.R` file in the analysis
+working directory and run it interactively.
 
-```matlab
-run("matlab/scripts/ifcb_sensitivity_analysis.m")
-```
+For Python, open or import the copied `ifcb_sensitivity_analysis.py` file from
+the analysis working directory.
+
+For MATLAB, open or run the copied `ifcb_sensitivity_analysis.m` file from the
+analysis working folder.
 
 ### Leave-One-Taxon Sensitivity
 
@@ -160,14 +188,14 @@ the taxon-removal deltas within each season and metric.
 
 Usage:
 
-```bash
-Rscript R/scripts/ifcb_sensitivity_analysis.R
-python analysis/community-variability/python/scripts/ifcb_sensitivity_analysis.py
-```
+For R, open the copied `ifcb_sensitivity_analysis.R` file in the analysis
+working directory and run it interactively.
 
-```matlab
-run("matlab/scripts/ifcb_sensitivity_analysis.m")
-```
+For Python, open or import the copied `ifcb_sensitivity_analysis.py` file from
+the analysis working directory.
+
+For MATLAB, open or run the copied `ifcb_sensitivity_analysis.m` file from the
+analysis working folder.
 
 ### Seasonal Metric Comparison
 
@@ -191,14 +219,14 @@ observed seasonal estimates.
 
 Usage:
 
-```bash
-Rscript R/scripts/ifcb_seasonal_comparison.R
-python analysis/community-variability/python/scripts/ifcb_seasonal_comparison.py
-```
+For R, open the copied `ifcb_seasonal_comparison.R` file in the analysis
+working directory and run it interactively.
 
-```matlab
-run("matlab/scripts/ifcb_seasonal_comparison.m")
-```
+For Python, open or import the copied `ifcb_seasonal_comparison.py` file from
+the analysis working directory.
+
+For MATLAB, open or run the copied `ifcb_seasonal_comparison.m` file from the
+analysis working folder.
 
 ### Spatial Compositional Variability Through Time
 
@@ -227,39 +255,6 @@ How it works in code:
 timestep with `BD`, total metacommunity biomass, timestep weight, and weighted
 contribution. The seasonal comparison script plots these outputs as time
 series.
-
-## Python Workflows
-
-Use the default carbon input:
-
-```bash
-python analysis/community-variability/python/scripts/ifcb_single_season.py
-python analysis/community-variability/python/scripts/ifcb_power_analysis.py
-python analysis/community-variability/python/scripts/ifcb_sensitivity_analysis.py
-python analysis/community-variability/python/scripts/ifcb_seasonal_comparison.py
-```
-
-Use another carbon input explicitly:
-
-```bash
-python analysis/community-variability/python/scripts/ifcb_single_season.py --input-file path/to/carbon.csv
-```
-
-## MATLAB Workflows
-
-From MATLAB, run from this directory:
-
-```matlab
-run("matlab/install_analysis_path.m")
-install_analysis_path(true)
-```
-
-```matlab
-run("matlab/scripts/ifcb_single_season.m")
-run("matlab/scripts/ifcb_power_analysis.m")
-run("matlab/scripts/ifcb_sensitivity_analysis.m")
-run("matlab/scripts/ifcb_seasonal_comparison.m")
-```
 
 ## Outputs
 

@@ -16,7 +16,7 @@ library(tidyverse)
 library(lubridate)
 library(readr)
 library(community.variability)
-source("R/scripts/ifcb_common.R")
+source("ifcb_common.R")
 logger <- setup_workflow_logging("ifcb_sensitivity_analysis_R")
 logger$info("Starting R sensitivity-analysis workflow")
 options(error = function() {

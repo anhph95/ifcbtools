@@ -1,39 +1,41 @@
 # R Analysis
 
-Run these scripts from `analysis/community-variability` so all outputs land in
-the shared `results/` folder.
+Open R or RStudio in the directory where you want to run the analysis. The
+downloaded scripts use that current working directory as the analysis workspace:
+inputs are read from `data/NESLTER_transect`, results are written under
+`results`, and logs are written under `logs`.
 
 Install the R metric dependency directly from Git:
 
 ```r
-install.packages("remotes")
+if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
 remotes::install_git(
   "https://github.com/anhph95/ifcbtools.git",
   subdir = "community.variability/R/community.variability"
 )
 ```
 
-Copy only the R analysis workflow:
+Download the R analysis scripts into the current working directory:
 
-```bash
-git clone --filter=blob:none --sparse https://github.com/anhph95/ifcbtools.git
-cd ifcbtools
-git sparse-checkout set analysis/community-variability/R
+```r
+source("https://raw.githubusercontent.com/anhph95/ifcbtools/main/analysis/community-variability/R/install_analysis_scripts.R")
 ```
 
-```bash
-Rscript R/scripts/ifcb_single_season.R
-Rscript R/scripts/ifcb_power_analysis.R
-Rscript R/scripts/ifcb_sensitivity_analysis.R
-Rscript R/scripts/ifcb_seasonal_comparison.R
+To replace existing copies, run:
+
+```r
+options(ifcb.analysis.overwrite = TRUE)
+source("https://raw.githubusercontent.com/anhph95/ifcbtools/main/analysis/community-variability/R/install_analysis_scripts.R")
 ```
 
-The R scripts are the plotting-rich reference workflow for the analysis.
+Open the copied scripts and run them interactively. Keep `ifcb_common.R` in the
+same directory as the analysis scripts because each script loads it with
+`source("ifcb_common.R")`.
 
 Each workflow writes timestamped `.out.log` and `.err.log` files under:
 
 ```text
-analysis/community-variability/logs/
+logs/
 ```
 
 Informational messages remain visible in the terminal. Fatal errors are also

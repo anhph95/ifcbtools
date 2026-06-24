@@ -4,7 +4,7 @@
 % Metrics are recalculated after each removal and written for comparison.
 
 workflowName = "ifcb_sensitivity_analysis_MATLAB";
-run("matlab/scripts/ifcb_common.m")
+run("ifcb_common.m")
 fprintf("Starting MATLAB sensitivity-analysis workflow\n");
 
 try

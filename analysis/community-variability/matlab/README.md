@@ -1,9 +1,10 @@
 # MATLAB Analysis
 
-Run these scripts from `analysis/community-variability` so `ifcb_common.m`
-can resolve the repository paths and shared `results/` folder.
+Run these scripts from `analysis/community-variability` so outputs land in the
+shared `results/` folder.
 
-Add the MATLAB analysis and metric folders to the path from a checkout:
+Install or add the MATLAB metric functions separately, then add the analysis
+scripts to the path:
 
 ```matlab
 run("analysis/community-variability/matlab/install_analysis_path.m")
@@ -32,10 +33,10 @@ Fatal exceptions are written with full reports to matching `.err.log` files.
 Each output log begins with the data paths and analysis settings used for that
 run.
 
-To fetch only the MATLAB analysis and metric code from Git:
+To copy only the MATLAB analysis workflow from Git:
 
 ```bash
 git clone --filter=blob:none --sparse https://github.com/anhph95/ifcbtools.git
 cd ifcbtools
-git sparse-checkout set analysis/community-variability/matlab community.variability/matlab
+git sparse-checkout set analysis/community-variability/matlab
 ```

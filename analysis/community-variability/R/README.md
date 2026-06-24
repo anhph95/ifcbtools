@@ -13,12 +13,12 @@ remotes::install_git(
 )
 ```
 
-Fetch only the R analysis workflow and R metric package:
+Copy only the R analysis workflow:
 
 ```bash
 git clone --filter=blob:none --sparse https://github.com/anhph95/ifcbtools.git
 cd ifcbtools
-git sparse-checkout set analysis/community-variability/R community.variability/R
+git sparse-checkout set analysis/community-variability/R
 ```
 
 ```bash

@@ -34,13 +34,14 @@ remotes::install_git(
 
 ## Fetch Only This Analysis
 
-The analysis folder is workflow code rather than an installable package. To
-fetch only the analysis and its metric-code dependencies:
+The analysis folder is workflow code rather than an installable package.
+Install the metric package separately, then use Git only to copy the analysis
+source:
 
 ```bash
 git clone --filter=blob:none --sparse https://github.com/anhph95/ifcbtools.git
 cd ifcbtools
-git sparse-checkout set analysis/community-variability community.variability
+git sparse-checkout set analysis/community-variability
 ```
 
 Use clean data for observed-sample analyses:

@@ -5,15 +5,12 @@
 %   X(time, site, taxon)
 
 analysisDir = pwd;
-repoDir = fileparts(fileparts(analysisDir));
 resultsDir = fullfile(analysisDir, 'results');
 if ~exist(resultsDir, 'dir')
     mkdir(resultsDir);
 end
 
-dataDir = fullfile(repoDir, 'data', 'NESLTER_transect');
-communityVariabilityMatlabDir = fullfile(repoDir, 'community.variability', 'matlab', 'community_variability');
-addpath(communityVariabilityMatlabDir);
+dataDir = fullfile(analysisDir, 'data', 'NESLTER_transect');
 
 seasons = ["JFM", "AMJ", "JAS", "OND"];
 stationList = ["L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8", "L9", "L10", "L11"];

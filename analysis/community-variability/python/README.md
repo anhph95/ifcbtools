@@ -31,12 +31,12 @@ pip install "git+https://github.com/anhph95/ifcbtools.git#subdirectory=community
 pip install "git+https://github.com/anhph95/ifcbtools.git#subdirectory=ifcb.process"
 ```
 
-Fetch only the Python analysis workflow and metric package:
+Copy only the Python analysis workflow:
 
 ```bash
 git clone --filter=blob:none --sparse https://github.com/anhph95/ifcbtools.git
 cd ifcbtools
-git sparse-checkout set analysis/community-variability/python community.variability/python
+git sparse-checkout set analysis/community-variability/python
 ```
 
 ```bash

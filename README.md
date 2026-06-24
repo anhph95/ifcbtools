@@ -122,13 +122,13 @@ run("community.variability/matlab/install_community_variability.m")
 install_community_variability(true)
 ```
 
-## Fetch One Folder
+## Fetch Analysis Only
 
-For MATLAB scripts or analysis workflows, use Git sparse checkout to fetch only
-the needed folders:
+Install the metric package separately, then use Git sparse checkout only to
+copy the analysis workflow:
 
 ```bash
 git clone --filter=blob:none --sparse https://github.com/anhph95/ifcbtools.git
 cd ifcbtools
-git sparse-checkout set analysis/community-variability community.variability/matlab
+git sparse-checkout set analysis/community-variability
 ```

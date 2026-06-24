@@ -6,7 +6,6 @@
 ## common project paths and constants used by the R analysis workflows.
 
 analysis_dir <- normalizePath(getwd(), winslash = "/", mustWork = TRUE)
-repo_dir <- normalizePath(file.path(analysis_dir, "..", ".."), winslash = "/", mustWork = TRUE)
 results_dir <- file.path(analysis_dir, "results")
 dir.create(results_dir, showWarnings = FALSE, recursive = TRUE)
 
@@ -27,9 +26,8 @@ main_cruise <- c(
   "AR99"
 )
 
-default_data_dir <- file.path(repo_dir, "data", "NESLTER_transect")
+default_data_dir <- file.path(analysis_dir, "data", "NESLTER_transect")
 default_carbon_input_file <- file.path(default_data_dir, "ifcb_carbon_clean_station_bottle_nutrient_fill.csv")
-community_variability_r_dir <- file.path(repo_dir, "community.variability", "R", "community.variability")
 
 command_arg_value <- function(flag, default = NULL) {
   args <- commandArgs(trailingOnly = FALSE)

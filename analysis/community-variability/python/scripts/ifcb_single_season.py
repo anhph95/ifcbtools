@@ -26,7 +26,7 @@ LOGGER = logging.getLogger(__name__)
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Calculate one seasonal IFCB metacommunity analysis.")
     parser.add_argument("--data-dir", default=default_data_dir(), type=str)
-    parser.add_argument("--data-version", choices=["clean", "fill"], default="fill")
+    parser.add_argument("--input-file", default=None, help="Carbon CSV input file.")
     parser.add_argument("--results-dir", default=default_results_dir(), type=str)
     parser.add_argument("--season", default="JAS")
     parser.add_argument("--top-taxa-per-station", default=3, type=int)
@@ -42,7 +42,7 @@ def main() -> int:
     LOGGER.info("Starting single-season workflow for %s", args.season)
 
     # Load taxon biomass columns j and select one comparable surface sample per year x station.
-    df, taxa_cols = load_ifcb_carbon(Path(args.data_dir), data_version=args.data_version)
+    df, taxa_cols = load_ifcb_carbon(Path(args.data_dir), input_file=args.input_file)
     ds = select_season_metacommunity(df, args.season)
     LOGGER.info("Complete years retained for %s: %s", args.season, ds["year"].nunique())
 

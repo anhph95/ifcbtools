@@ -28,14 +28,32 @@ main_cruise <- c(
 )
 
 default_data_dir <- file.path(repo_dir, "data", "NESLTER_transect")
+default_carbon_input_file <- file.path(default_data_dir, "ifcb_carbon_clean_station_bottle_nutrient_fill.csv")
 community_variability_r_dir <- file.path(repo_dir, "community.variability", "R", "community.variability")
+
+command_arg_value <- function(flag, default = NULL) {
+  args <- commandArgs(trailingOnly = FALSE)
+  match_idx <- which(args == flag)
+  if (length(match_idx) > 0 && match_idx[1] < length(args)) {
+    return(args[match_idx[1] + 1])
+  }
+
+  prefix <- paste0(flag, "=")
+  inline_idx <- grep(paste0("^", prefix), args)
+  if (length(inline_idx) > 0) {
+    return(sub(paste0("^", prefix), "", args[inline_idx[1]]))
+  }
+
+  default
+}
 
 ## ------------------------------------------------
 ## Shared dependency-free workflow logging
 ## ------------------------------------------------
 ## Each workflow writes timestamped informational and error logs under
-## results/logs while retaining the same messages in the terminal.
-setup_workflow_logging <- function(workflow_name, log_dir = file.path(results_dir, "logs")) {
+## ./logs from the invocation directory while retaining the same messages
+## in the terminal.
+setup_workflow_logging <- function(workflow_name, log_dir = file.path(getwd(), "logs")) {
   dir.create(log_dir, showWarnings = FALSE, recursive = TRUE)
   timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
   out_path <- file.path(log_dir, paste0(workflow_name, "_", timestamp, ".out.log"))

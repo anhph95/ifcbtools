@@ -16,8 +16,8 @@ function export_ifcb(dataset, options)
 % Outputs:
 %   <OutputDir>/ifcb_class.csv
 %   <OutputDir>/ifcb_metadata.csv
-%   <OutputDir>/ifcb_count_raw.csv
-%   <OutputDir>/ifcb_carbon_raw.csv
+%   <OutputDir>/ifcb_count.csv
+%   <OutputDir>/ifcb_carbon.csv
 %
 % Scientific data model:
 %   rows    = IFCB samples or sample-derived records
@@ -68,7 +68,7 @@ end
 
 %% --- CONFIGURE WORKFLOW LOGGING ---
 
-logDir = fullfile(outputDir, 'logs');
+logDir = fullfile(pwd, 'logs');
 if ~exist(logDir, 'dir')
     mkdir(logDir);
 end
@@ -115,7 +115,7 @@ for f = 1:length(fileList)
 
     %% Extract class labels and metadata once.
     %
-    % The *_label variables define the class groups used by the raw count
+    % The *_label variables define the class groups used by the exported count
     % and carbon tables. Their exported table records:
     %   class = IFCB class/taxon name
     %   label = source label group in the MATLAB product
@@ -157,27 +157,27 @@ for f = 1:length(fileList)
         savedMetadataAndClass = true;
     end
 
-    %% Save raw count table when present.
+    %% Save count table when present.
     %
     % Count data are cell abundance observations:
     %   N_{sample,class} = number of classified IFCB images/cells
     if isfield(loadedData, 'classcount_opt_adhoc_merge') && ...
             istable(loadedData.classcount_opt_adhoc_merge)
-        outFile = fullfile(outputDir, 'ifcb_count_raw.csv');
-        fprintf('Saving raw cell count table: %s\n', outFile);
+        outFile = fullfile(outputDir, 'ifcb_count.csv');
+        fprintf('Saving cell count table: %s\n', outFile);
         writetable(loadedData.classcount_opt_adhoc_merge, outFile);
     else
         fprintf('Count table not found in this file. Skipping.\n');
     end
 
-    %% Save raw carbon table when present.
+    %% Save carbon table when present.
     %
     % Carbon data are biomass observations:
     %   C_{sample,class} = estimated carbon biomass for each IFCB class
     if isfield(loadedData, 'classC_opt_adhoc_merge') && ...
             istable(loadedData.classC_opt_adhoc_merge)
-        outFile = fullfile(outputDir, 'ifcb_carbon_raw.csv');
-        fprintf('Saving raw carbon table: %s\n', outFile);
+        outFile = fullfile(outputDir, 'ifcb_carbon.csv');
+        fprintf('Saving carbon table: %s\n', outFile);
         writetable(loadedData.classC_opt_adhoc_merge, outFile);
     else
         fprintf('Carbon table not found in this file. Skipping.\n');

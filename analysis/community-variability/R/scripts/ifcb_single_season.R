@@ -42,6 +42,7 @@ options(error = function() {
 ## The station list fixes the local-community set i = 1, ..., n_site
 ## used to construct a balanced metacommunity for each year.
 data_dir <- default_data_dir
+input_file <- command_arg_value("--input-file", default_carbon_input_file)
 season_filter <- "JAS"
 station_list <- c(
   "L1", "L2", "L3", "L4", "L5", "L6",
@@ -75,6 +76,7 @@ logger$config(list(
   command = logger$command(commandArgs()),
   working_directory = getwd(),
   data_dir = normalizePath(data_dir, winslash = "/", mustWork = FALSE),
+  input_file = normalizePath(input_file, winslash = "/", mustWork = FALSE),
   results_dir = normalizePath(results_dir, winslash = "/", mustWork = FALSE),
   season = season_filter,
   station_list = station_list,
@@ -90,7 +92,7 @@ logger$config(list(
 ## The taxon columns form the j dimension of:
 ##   X[t, i, j] = biomass of taxon j at station i in year t
 df <- read.csv(
-  file.path(data_dir, "ifcb_carbon_mix.csv"),
+  input_file,
   stringsAsFactors = FALSE
 )
 colnames(df) <- gsub("\\.", " ", colnames(df))

@@ -50,6 +50,7 @@ MAIN_CRUISE = [
     "AR95",
     "AR99",
 ]
+DEFAULT_CARBON_INPUT = "ifcb_carbon_clean_station_bottle_nutrient_fill.csv"
 
 
 def work_dir() -> Path:
@@ -74,9 +75,9 @@ def add_logging_arguments(parser: argparse.ArgumentParser) -> None:
 
 
 def configure_workflow_logging(args: argparse.Namespace, name: str) -> logging.Logger:
-    """Write workflow logs beside analysis results unless explicitly overridden."""
+    """Write workflow logs under the invocation directory unless explicitly overridden."""
     results_dir = Path(args.results_dir)
-    log_dir = Path(args.log_dir) if args.log_dir is not None else results_dir / "logs"
+    log_dir = Path(args.log_dir) if args.log_dir is not None else Path.cwd() / "logs"
     logger = setup_logging(log_dir=log_dir, name=name, level=getattr(logging, args.log_level))
     settings = vars(args).copy()
     settings["command"] = redact_command_line(sys.argv)
@@ -88,17 +89,15 @@ def configure_workflow_logging(args: argparse.Namespace, name: str) -> logging.L
     return logger
 
 
-def load_ifcb_carbon(data_dir: Path, data_version: str = "fill") -> tuple[pd.DataFrame, list[str]]:
+def load_ifcb_carbon(data_dir: Path, input_file: str | Path | None = None) -> tuple[pd.DataFrame, list[str]]:
     """Load IFCB carbon biomass and identify taxon biomass columns j."""
-    if data_version not in {"clean", "fill"}:
-        raise ValueError("data_version must be 'clean' or 'fill'.")
-
-    carbon_path = data_dir / f"ifcb_carbon_{data_version}.csv"
+    carbon_path = Path(input_file) if input_file is not None else data_dir / DEFAULT_CARBON_INPUT
     taxonomy_path = data_dir / "ifcb_taxonomy.csv"
     if not carbon_path.exists():
         raise FileNotFoundError(
-            f"Missing {carbon_path}. Run `ifcb-fill-missing {data_dir / 'ifcb_carbon_clean.csv'}` first, "
-            "or use --data-version clean."
+            f"Missing {carbon_path}. Run `ifcb-process {data_dir / 'ifcb_carbon.csv'} --all` and "
+            f"`ifcb-fill-missing {data_dir / 'ifcb_carbon_clean_station_bottle_nutrient.csv'}` first, "
+            "or pass --input-file."
         )
     if not taxonomy_path.exists():
         raise FileNotFoundError(f"Missing taxonomy file: {taxonomy_path}")

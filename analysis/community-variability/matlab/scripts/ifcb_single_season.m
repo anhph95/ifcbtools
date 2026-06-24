@@ -10,20 +10,20 @@ fprintf("Starting MATLAB single-season workflow\n");
 
 try
 
-dataVersion = "fill";
+inputFile = fullfile(dataDir, "ifcb_carbon_clean_station_bottle_nutrient_fill.csv");
 seasonFilter = "JAS";
 topTaxaPerStation = 3;
 logRunConfiguration(struct( ...
     "working_directory", pwd, ...
     "data_dir", dataDir, ...
     "results_dir", resultsDir, ...
-    "data_version", dataVersion, ...
+    "input_file", inputFile, ...
     "season", seasonFilter, ...
     "top_taxa_per_station", topTaxaPerStation, ...
     "station_list", stationList, ...
     "main_cruise", mainCruise));
 
-[df, taxaCols] = load_ifcb_carbon_local(dataDir, dataVersion);
+[df, taxaCols] = load_ifcb_carbon_local(inputFile, dataDir);
 ds = select_season_metacommunity_local(df, seasonFilter, stationList, mainCruise);
 fprintf("Complete years retained for %s: %d\n", seasonFilter, numel(unique(ds.year)));
 
@@ -51,8 +51,8 @@ catch ME
     rethrow(ME)
 end
 
-function [df, taxaCols] = load_ifcb_carbon_local(dataDir, dataVersion)
-carbonPath = fullfile(dataDir, "ifcb_carbon_" + dataVersion + ".csv");
+function [df, taxaCols] = load_ifcb_carbon_local(inputFile, dataDir)
+carbonPath = inputFile;
 taxonomyPath = fullfile(dataDir, "ifcb_taxonomy.csv");
 df = readtable(carbonPath, "VariableNamingRule", "preserve");
 taxonomy = readtable(taxonomyPath, "VariableNamingRule", "preserve");

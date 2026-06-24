@@ -67,9 +67,9 @@ not search alternate paths.
 The persisted processing products are:
 
 ```text
-*_raw.csv    # MATLAB-exported input
-*_clean.csv  # selected output; contents depend on the requested operations
-*_fill.csv   # optional fill product for balanced metacommunity analyses
+ifcb_count.csv / ifcb_carbon.csv  # MATLAB-exported input
+*_clean.csv                       # selected output; contents depend on the requested operations
+*_fill.csv                        # optional fill product for balanced metacommunity analyses
 ```
 
 ## Processing Pipeline
@@ -86,21 +86,21 @@ shown below, regardless of flag order:
 Run the complete pipeline with:
 
 ```bash
-ifcb-process data/NESLTER_transect/ifcb_count_raw.csv --all
+ifcb-process data/NESLTER_transect/ifcb_count.csv --all
 ```
 
 Unless `--output-file` is provided, `--all` writes:
 
 ```text
-ifcb_count_raw.csv -> ifcb_count_raw_processed.csv
+ifcb_count.csv -> ifcb_count_clean_station_bottle_nutrient.csv
 ```
 
-`--clean` is the main workflow. It reads the selected raw CSV, filters and
+`--clean` is the main workflow. It reads the selected MATLAB-exported CSV, filters and
 cleans metadata, aggregates cast replicates, and normalizes taxon values to
 per-liter floating-point values:
 
 ```bash
-ifcb-process data/NESLTER_transect/ifcb_count_raw.csv \
+ifcb-process data/NESLTER_transect/ifcb_count.csv \
   --clean \
   --add-station \
   --merge-bottle \
@@ -125,7 +125,7 @@ sample.csv --clean                         -> sample_clean.csv
 sample.csv --add-station                   -> sample_station.csv
 sample.csv --clean --add-station           -> sample_clean_station.csv
 sample.csv --merge-bottle --merge-nutrient -> sample_bottle_nutrient.csv
-sample.csv --all                           -> sample_processed.csv
+sample.csv --all                           -> sample_clean_station_bottle_nutrient.csv
 ```
 
 During cleaning, `ifcb_metadata.csv` and `ifcb_taxonomy.csv` default to files
@@ -136,7 +136,7 @@ ifcb-process data/NESLTER_transect/counts.csv \
   --clean \
   --metadata-file metadata.csv \
   --taxonomy-file taxa.csv \
-  --output-file counts_processed.csv
+  --output-file counts_clean.csv
 ```
 
 The complete pipeline includes:
@@ -153,8 +153,8 @@ The complete pipeline includes:
 Each Python processing command records the workflow steps in timestamped files:
 
 ```text
-<output-dir>/logs/<command>_YYYYMMDD_HHMMSS.out.log
-<output-dir>/logs/<command>_YYYYMMDD_HHMMSS.err.log
+<current-directory>/logs/<command>_YYYYMMDD_HHMMSS.out.log
+<current-directory>/logs/<command>_YYYYMMDD_HHMMSS.err.log
 ```
 
 The `.out.log` file records messages at the selected level and above, while
@@ -176,7 +176,7 @@ same-cruise underway samples, fills bottle/nutrient values only for the new
 rows, and writes by default:
 
 ```text
-ifcb_carbon_clean.csv -> ifcb_carbon_fill.csv
+ifcb_carbon_clean.csv -> ifcb_carbon_clean_fill.csv
 ```
 
 The taxonomy CSV is read to map annotations into `Label` groups but is not

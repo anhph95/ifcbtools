@@ -55,6 +55,19 @@ class ProcessCliTests(unittest.TestCase):
 
         self.assertEqual(output, Path("data/sample_clean_station_nutrient.csv"))
 
+    def test_all_uses_expanded_operation_suffixes(self) -> None:
+        """Name --all output from the operations it expands to."""
+        args = parse_args(["data/sample.csv", "--all"])
+        output = default_output_path(
+            "data/sample.csv",
+            clean=args.clean,
+            add_station=args.add_station,
+            merge_bottle_data=args.merge_bottle,
+            merge_nutrient=args.merge_nutrient,
+        )
+
+        self.assertEqual(output, Path("data/sample_clean_station_bottle_nutrient.csv"))
+
     def test_enrichment_only_reads_existing_output(self) -> None:
         """Apply a selected enrichment operation to exactly one input file."""
         with tempfile.TemporaryDirectory() as temp_dir:

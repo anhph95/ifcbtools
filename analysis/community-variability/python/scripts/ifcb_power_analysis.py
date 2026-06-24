@@ -24,7 +24,7 @@ LOGGER = logging.getLogger(__name__)
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Bootstrap seasonal IFCB metacommunity metrics.")
     parser.add_argument("--data-dir", default=default_data_dir(), type=str)
-    parser.add_argument("--data-version", choices=["clean", "fill"], default="fill")
+    parser.add_argument("--input-file", default=None, help="Carbon CSV input file.")
     parser.add_argument("--results-dir", default=default_results_dir(), type=str)
     parser.add_argument("--seasons", nargs="+", default=SEASONS)
     parser.add_argument("--n-boot", default=1000, type=int)
@@ -41,7 +41,7 @@ def main() -> int:
     LOGGER.info("Starting power analysis for seasons: %s", ", ".join(args.seasons))
 
     # Load once; each season applies the same balanced-metacommunity selection.
-    df, taxa_cols = load_ifcb_carbon(Path(args.data_dir), data_version=args.data_version)
+    df, taxa_cols = load_ifcb_carbon(Path(args.data_dir), input_file=args.input_file)
 
     for season in args.seasons:
         LOGGER.info("Processing season: %s", season)

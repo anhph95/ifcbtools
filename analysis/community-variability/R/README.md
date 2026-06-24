@@ -33,7 +33,7 @@ The R scripts are the plotting-rich reference workflow for the analysis.
 Each workflow writes timestamped `.out.log` and `.err.log` files under:
 
 ```text
-analysis/community-variability/results/logs/
+analysis/community-variability/logs/
 ```
 
 Informational messages remain visible in the terminal. Fatal errors are also

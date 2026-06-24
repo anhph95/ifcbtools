@@ -106,8 +106,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     output_path = (
         Path(args.output_file)
         if args.output_file is not None
-        else input_path.with_name(f"{input_path.stem}_processed{input_path.suffix}")
-        if args.all
         else default_output_path(
             input_path,
             clean=args.clean,
@@ -118,7 +116,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     metadata_path = Path(args.metadata_file) if args.metadata_file is not None else input_path.parent / "ifcb_metadata.csv"
     taxonomy_path = Path(args.taxonomy_file) if args.taxonomy_file is not None else input_path.parent / "ifcb_taxonomy.csv"
-    log_dir = Path(args.log_dir) if args.log_dir is not None else output_path.parent / "logs"
+    log_dir = Path(args.log_dir) if args.log_dir is not None else Path.cwd() / "logs"
     setup_logging(log_dir=log_dir, name="ifcb_process", level=getattr(logging, args.log_level))
     max_distance = None if args.no_station_distance_limit else args.max_station_distance_km
     LOGGER.info("Starting IFCB processing for %s", input_path)

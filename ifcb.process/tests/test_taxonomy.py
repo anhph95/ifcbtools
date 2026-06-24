@@ -64,7 +64,7 @@ class TaxonomyTests(unittest.TestCase):
             ):
                 output = make_filled_dataset(data_dir / "ifcb_count_clean.csv")
 
-            self.assertEqual(output, data_dir / "ifcb_count_fill.csv")
+            self.assertEqual(output, data_dir / "ifcb_count_clean_fill.csv")
             self.assertEqual(list(data_dir.glob("ifcb_taxonomy*.csv")), [data_dir / "ifcb_taxonomy.csv"])
 
     def test_fill_assigns_station_when_column_is_absent(self) -> None:

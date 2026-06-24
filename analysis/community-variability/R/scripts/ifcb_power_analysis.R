@@ -35,6 +35,7 @@ options(error = function() {
 ## spatial and compositional structure of each annual metacommunity is
 ## preserved.
 data_dir <- default_data_dir
+input_file <- command_arg_value("--input-file", default_carbon_input_file)
 seasons <- c("JFM", "AMJ", "JAS", "OND")
 n_boot <- 1000
 bootstrap_seed <- 123
@@ -57,6 +58,7 @@ logger$config(list(
   command = logger$command(commandArgs()),
   working_directory = getwd(),
   data_dir = normalizePath(data_dir, winslash = "/", mustWork = FALSE),
+  input_file = normalizePath(input_file, winslash = "/", mustWork = FALSE),
   results_dir = normalizePath(results_dir, winslash = "/", mustWork = FALSE),
   seasons = seasons,
   n_boot = n_boot,
@@ -70,7 +72,7 @@ logger$config(list(
 ## Read carbon biomass observations and identify the IFCB taxon
 ## columns that define the taxon dimension j in X[t, i, j].
 df <- read.csv(
-  file.path(data_dir, "ifcb_carbon_mix.csv"),
+  input_file,
   stringsAsFactors = FALSE
 )
 colnames(df) <- gsub("\\.", " ", colnames(df))

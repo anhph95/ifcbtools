@@ -381,8 +381,7 @@ def make_filled_dataset(
     """Create one filled IFCB CSV from one explicitly selected input CSV."""
     input_path = Path(input_file)
     if output_file is None:
-        output_stem = input_path.stem[:-6] + "_fill" if input_path.stem.endswith("_clean") else input_path.stem + "_fill"
-        output_path = input_path.with_name(output_stem + input_path.suffix)
+        output_path = input_path.with_name(f"{input_path.stem}_fill{input_path.suffix}")
     else:
         output_path = Path(output_file)
     taxonomy_path = Path(taxonomy_file) if taxonomy_file is not None else input_path.parent / "ifcb_taxonomy.csv"
@@ -453,12 +452,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
     input_path = Path(args.input_file)
     if args.output_file is None:
-        output_stem = input_path.stem[:-6] + "_fill" if input_path.stem.endswith("_clean") else input_path.stem + "_fill"
-        output_path = input_path.with_name(output_stem + input_path.suffix)
+        output_path = input_path.with_name(f"{input_path.stem}_fill{input_path.suffix}")
     else:
         output_path = Path(args.output_file)
     taxonomy_path = Path(args.taxonomy_file) if args.taxonomy_file is not None else input_path.parent / "ifcb_taxonomy.csv"
-    log_dir = Path(args.log_dir) if args.log_dir is not None else output_path.parent / "logs"
+    log_dir = Path(args.log_dir) if args.log_dir is not None else Path.cwd() / "logs"
     max_distance = None if args.no_station_distance_limit else args.max_station_distance_km
     setup_logging(log_dir=log_dir, name="ifcb_fill_missing", level=getattr(logging, args.log_level))
     LOGGER.info("Starting IFCB missing-cast fill for %s", input_path)

@@ -7,10 +7,16 @@ workspace convention used by `stingraytools`. By default, the scripts read:
 <current-directory>/data/NESLTER_transect
 ```
 
-and write results and logs under:
+write results under:
 
 ```text
 <current-directory>/results
+```
+
+By default, logs are written under:
+
+```text
+<current-directory>/logs
 ```
 
 Run the scripts from the intended workspace, or pass explicit `--data-dir`,
@@ -34,9 +40,9 @@ git sparse-checkout set analysis/community-variability/python community.variabil
 ```
 
 ```bash
-python analysis/community-variability/python/scripts/ifcb_single_season.py --data-version fill
-python analysis/community-variability/python/scripts/ifcb_power_analysis.py --data-version fill
-python analysis/community-variability/python/scripts/ifcb_sensitivity_analysis.py --data-version fill
+python analysis/community-variability/python/scripts/ifcb_single_season.py
+python analysis/community-variability/python/scripts/ifcb_power_analysis.py
+python analysis/community-variability/python/scripts/ifcb_sensitivity_analysis.py
 python analysis/community-variability/python/scripts/ifcb_seasonal_comparison.py
 ```
 
@@ -45,7 +51,7 @@ for estimates, bootstrap summaries, sensitivity deltas, and seasonal comparison
 tables.
 
 Each script also writes timestamped `.out.log` and `.err.log` files under
-`<results-dir>/logs`. Use `--log-level DEBUG` for more detail or
+`<current-directory>/logs`. Use `--log-level DEBUG` for more detail or
 `--log-dir PATH` to choose another log directory; terminal logging remains
 enabled. Each log begins with the command-line arguments and resolved workflow
 paths; secret-like parameter names are automatically redacted.

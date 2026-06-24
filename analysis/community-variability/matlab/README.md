@@ -25,7 +25,7 @@ MATLAB command-window output and warnings are recorded with `diary` in
 timestamped `.out.log` files under:
 
 ```text
-analysis/community-variability/results/logs/
+analysis/community-variability/logs/
 ```
 
 Fatal exceptions are written with full reports to matching `.err.log` files.

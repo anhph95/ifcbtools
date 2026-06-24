@@ -51,10 +51,11 @@ Command-window output is also written to a timestamped `.out.log`, and fatal
 exceptions to a matching `.err.log`, under:
 
 ```text
-data/<dataset>/logs/
+<workdir>/logs/
 ```
 
-This is the same logging folder used by the Python processing commands.
+This is the same default logging folder used by the Python processing commands
+when they are invoked from the same working directory.
 The output log records the selected dataset, source directory, input files, and
 resolved output and logging directories.
 
@@ -62,8 +63,8 @@ The Python processing step expects:
 
 ```text
 ifcb_metadata.csv
-ifcb_count_raw.csv
-ifcb_carbon_raw.csv
+ifcb_count.csv
+ifcb_carbon.csv
 ifcb_taxonomy.csv
 ```
 

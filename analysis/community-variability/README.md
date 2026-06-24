@@ -15,7 +15,7 @@ Create those files with the processing package:
 
 ```bash
 pip install "git+https://github.com/anhph95/ifcbtools.git#subdirectory=ifcb.process"
-ifcb-process data/NESLTER_transect/ifcb_carbon_raw.csv --clean
+ifcb-process data/NESLTER_transect/ifcb_carbon.csv --clean
 ifcb-fill-missing data/NESLTER_transect/ifcb_carbon_clean.csv
 ```
 
@@ -53,7 +53,7 @@ ifcb_taxonomy.csv
 Use fill data for balanced metacommunity analyses:
 
 ```text
-ifcb_carbon_fill.csv
+ifcb_carbon_clean_fill.csv
 ifcb_taxonomy.csv
 ```
 
@@ -98,7 +98,7 @@ Usage:
 
 ```bash
 Rscript R/scripts/ifcb_power_analysis.R
-python analysis/community-variability/python/scripts/ifcb_power_analysis.py --data-version fill
+python analysis/community-variability/python/scripts/ifcb_power_analysis.py
 ```
 
 ```matlab
@@ -129,7 +129,7 @@ Usage:
 
 ```bash
 Rscript R/scripts/ifcb_sensitivity_analysis.R
-python analysis/community-variability/python/scripts/ifcb_sensitivity_analysis.py --data-version fill
+python analysis/community-variability/python/scripts/ifcb_sensitivity_analysis.py
 ```
 
 ```matlab
@@ -161,7 +161,7 @@ Usage:
 
 ```bash
 Rscript R/scripts/ifcb_sensitivity_analysis.R
-python analysis/community-variability/python/scripts/ifcb_sensitivity_analysis.py --data-version fill
+python analysis/community-variability/python/scripts/ifcb_sensitivity_analysis.py
 ```
 
 ```matlab
@@ -229,19 +229,19 @@ series.
 
 ## Python Workflows
 
-Use fill data by default:
+Use the default carbon input:
 
 ```bash
-python analysis/community-variability/python/scripts/ifcb_single_season.py --data-version fill
-python analysis/community-variability/python/scripts/ifcb_power_analysis.py --data-version fill
-python analysis/community-variability/python/scripts/ifcb_sensitivity_analysis.py --data-version fill
+python analysis/community-variability/python/scripts/ifcb_single_season.py
+python analysis/community-variability/python/scripts/ifcb_power_analysis.py
+python analysis/community-variability/python/scripts/ifcb_sensitivity_analysis.py
 python analysis/community-variability/python/scripts/ifcb_seasonal_comparison.py
 ```
 
-Use clean data explicitly:
+Use another carbon input explicitly:
 
 ```bash
-python analysis/community-variability/python/scripts/ifcb_single_season.py --data-version clean
+python analysis/community-variability/python/scripts/ifcb_single_season.py --input-file path/to/carbon.csv
 ```
 
 ## MATLAB Workflows

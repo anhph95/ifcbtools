@@ -28,12 +28,12 @@ mainCruise = [
 %% Shared dependency-free workflow logging
 %
 % The calling script defines workflowName before running this file. MATLAB's
-% diary records command-window output and warnings in the same results/logs
-% folder used by the Python and R analysis workflows.
+% diary records command-window output and warnings under ./logs from the
+% invocation directory.
 if ~exist("workflowName", "var")
     workflowName = "ifcb_matlab";
 end
-logDir = fullfile(resultsDir, "logs");
+logDir = fullfile(pwd, "logs");
 if ~exist(logDir, "dir")
     mkdir(logDir);
 end

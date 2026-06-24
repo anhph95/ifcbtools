@@ -44,13 +44,13 @@ By default, the exporter processes `NESLTER_transect`. It reads from:
 \\sosiknas1\IFCB_products\<dataset>\summary
 ```
 
-and write the required raw products under the active MATLAB workspace:
+and write the required exported products under the active MATLAB workspace:
 
 ```text
 <workdir>/data/<dataset>/ifcb_class.csv
 <workdir>/data/<dataset>/ifcb_metadata.csv
-<workdir>/data/<dataset>/ifcb_count_raw.csv
-<workdir>/data/<dataset>/ifcb_carbon_raw.csv
+<workdir>/data/<dataset>/ifcb_count.csv
+<workdir>/data/<dataset>/ifcb_carbon.csv
 ```
 
 Process a different dataset without editing the downloaded function:

@@ -9,21 +9,21 @@ fprintf("Starting MATLAB power-analysis workflow\n");
 
 try
 
-dataVersion = "fill";
+inputFile = fullfile(dataDir, "ifcb_carbon_clean_station_bottle_nutrient_fill.csv");
 nBoot = 1000;
 bootstrapSeed = 123;
 logRunConfiguration(struct( ...
     "working_directory", pwd, ...
     "data_dir", dataDir, ...
     "results_dir", resultsDir, ...
-    "data_version", dataVersion, ...
+    "input_file", inputFile, ...
     "seasons", seasons, ...
     "n_boot", nBoot, ...
     "bootstrap_seed", bootstrapSeed, ...
     "station_list", stationList, ...
     "main_cruise", mainCruise));
 
-[df, taxaCols] = load_ifcb_carbon_power_local(dataDir, dataVersion);
+[df, taxaCols] = load_ifcb_carbon_power_local(inputFile, dataDir);
 for seasonFilter = seasons
     fprintf("Processing season: %s\n", seasonFilter);
     ds = select_season_metacommunity_power_local(df, seasonFilter, stationList, mainCruise);
@@ -48,8 +48,8 @@ catch ME
     rethrow(ME)
 end
 
-function [df, taxaCols] = load_ifcb_carbon_power_local(dataDir, dataVersion)
-carbonPath = fullfile(dataDir, "ifcb_carbon_" + dataVersion + ".csv");
+function [df, taxaCols] = load_ifcb_carbon_power_local(inputFile, dataDir)
+carbonPath = inputFile;
 taxonomyPath = fullfile(dataDir, "ifcb_taxonomy.csv");
 df = readtable(carbonPath, "VariableNamingRule", "preserve");
 taxonomy = readtable(taxonomyPath, "VariableNamingRule", "preserve");

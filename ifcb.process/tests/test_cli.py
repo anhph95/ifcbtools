@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch
 
 from ifcb.process.neslter.cli import parse_args
-from ifcb.process.neslter.process import default_output_path, normalization_settings, process
+from ifcb.process.neslter.process import default_output_path, normalization_settings, process, resolve_data_type
 
 
 class ProcessCliTests(unittest.TestCase):
@@ -33,7 +33,7 @@ class ProcessCliTests(unittest.TestCase):
         args = parse_args(["input.csv", "--clean"])
 
         self.assertTrue(args.clean)
-        self.assertEqual(args.data_type, "count")
+        self.assertIsNone(args.data_type)
 
     def test_clean_accepts_explicit_carbon_data_type(self) -> None:
         """Allow carbon input to select carbon-specific normalization."""
@@ -75,6 +75,23 @@ class ProcessCliTests(unittest.TestCase):
         """Reject product names without defined unit conversions."""
         with self.assertRaises(ValueError):
             normalization_settings("biovolume")
+
+    def test_count_filename_resolves_count_data_type(self) -> None:
+        """Infer count normalization from standard count filenames."""
+        self.assertEqual(resolve_data_type("data/ifcb_count.csv"), "count")
+
+    def test_carbon_filename_resolves_carbon_data_type(self) -> None:
+        """Infer carbon normalization from standard carbon filenames."""
+        self.assertEqual(resolve_data_type("data/ifcb_carbon.csv"), "carbon")
+
+    def test_explicit_data_type_overrides_filename(self) -> None:
+        """Honor explicit data type when provided."""
+        self.assertEqual(resolve_data_type("data/ifcb_count.csv", data_type="carbon"), "carbon")
+
+    def test_ambiguous_filename_requires_data_type(self) -> None:
+        """Ask users to rerun with an explicit data type for ambiguous names."""
+        with self.assertRaisesRegex(ValueError, "--data-type count or --data-type carbon"):
+            resolve_data_type("data/ifcb.csv")
 
     def test_all_uses_expanded_operation_suffixes(self) -> None:
         """Name --all output from the operations it expands to."""

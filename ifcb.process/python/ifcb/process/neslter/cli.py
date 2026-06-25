@@ -80,8 +80,8 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--data-type",
         choices=["count", "carbon"],
-        default="count",
-        help="Input data product used for --clean normalization.",
+        default=None,
+        help="Input data product used for --clean normalization. Defaults to inferring from the input filename.",
     )
     parser.add_argument(
         "--download-taxonomy-if-missing",

@@ -30,6 +30,22 @@ NORMALIZATION_UNITS = {
 }
 
 
+def resolve_data_type(input_file: str | os.PathLike[str], data_type: str | None = None) -> str:
+    """Use an explicit data type or infer one from a standard IFCB filename."""
+    if data_type is not None:
+        return data_type
+
+    stem = Path(input_file).stem.lower()
+    if "count" in stem:
+        return "count"
+    if "carbon" in stem:
+        return "carbon"
+    raise ValueError(
+        "Cannot infer IFCB data type from input filename. "
+        "Re-run with --data-type count or --data-type carbon."
+    )
+
+
 def normalization_settings(data_type: str) -> tuple[float, str]:
     """Return the unit conversion scale and output unit for an IFCB product."""
     try:
@@ -74,7 +90,7 @@ def process(
     nutrient_source: str | os.PathLike[str] = DEFAULT_NUTRIENT_URL,
     metadata_file: str | os.PathLike[str] | None = None,
     taxonomy_file: str | os.PathLike[str] | None = None,
-    data_type: str = "count",
+    data_type: str | None = None,
     clean: bool = False,
     add_station: bool = False,
     merge_bottle_data: bool = False,
@@ -134,10 +150,11 @@ def process(
         df = pd.merge(meta, raw, on="pid", how="left")
         LOGGER.info("Merged metadata and data: %s rows", len(df))
         df = aggregate_cast_data(df, raw_data_cols)
-        scaling_factor, output_unit = normalization_settings(data_type)
+        resolved_data_type = resolve_data_type(input_path, data_type=data_type)
+        scaling_factor, output_unit = normalization_settings(resolved_data_type)
         LOGGER.info(
             "Normalizing %s taxon columns with scaling factor %s to output unit: %s",
-            data_type,
+            resolved_data_type,
             scaling_factor,
             output_unit,
         )

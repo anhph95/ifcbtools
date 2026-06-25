@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch
 
 from ifcb.process.neslter.cli import parse_args
-from ifcb.process.neslter.process import default_output_path, process
+from ifcb.process.neslter.process import default_output_path, normalization_scaling_factor, process
 
 
 class ProcessCliTests(unittest.TestCase):
@@ -54,6 +54,19 @@ class ProcessCliTests(unittest.TestCase):
         )
 
         self.assertEqual(output, Path("data/sample_clean_station_nutrient.csv"))
+
+    def test_count_input_uses_cells_per_liter_scale(self) -> None:
+        """Infer count normalization from the selected input filename."""
+        self.assertEqual(normalization_scaling_factor("data/ifcb_count.csv"), 1000.0)
+
+    def test_carbon_input_uses_micrograms_per_liter_scale(self) -> None:
+        """Infer carbon normalization from the selected input filename."""
+        self.assertEqual(normalization_scaling_factor("data/ifcb_carbon.csv"), 0.001)
+
+    def test_ambiguous_input_requires_product_name(self) -> None:
+        """Avoid silently applying the wrong unit conversion."""
+        with self.assertRaises(ValueError):
+            normalization_scaling_factor("data/ifcb.csv")
 
     def test_all_uses_expanded_operation_suffixes(self) -> None:
         """Name --all output from the operations it expands to."""

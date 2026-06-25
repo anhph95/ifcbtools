@@ -24,6 +24,19 @@ from .taxonomy import import_google_sheet
 LOGGER = logging.getLogger("ifcb.process.neslter")
 
 
+def normalization_scaling_factor(input_file: str | os.PathLike[str]) -> float:
+    """Return the unit conversion scale implied by the IFCB product filename."""
+    stem = Path(input_file).stem.lower()
+    if "count" in stem:
+        return 1000.0
+    if "carbon" in stem:
+        return 0.001
+    raise ValueError(
+        "Cannot infer IFCB normalization scale from input filename. "
+        "Use a count or carbon filename such as ifcb_count.csv or ifcb_carbon.csv."
+    )
+
+
 def default_output_path(
     input_file: str | os.PathLike[str],
     *,
@@ -118,7 +131,9 @@ def process(
         df = pd.merge(meta, raw, on="pid", how="left")
         LOGGER.info("Merged metadata and data: %s rows", len(df))
         df = aggregate_cast_data(df, raw_data_cols)
-        df = normalize(df, raw_data_cols)
+        scaling_factor = normalization_scaling_factor(input_path)
+        LOGGER.info("Normalizing taxon columns with scaling factor: %s", scaling_factor)
+        df = normalize(df, raw_data_cols, scaling_factor=scaling_factor)
     else:
         LOGGER.info("Reading input: %s", input_path)
         df = pd.read_csv(input_path, low_memory=False)

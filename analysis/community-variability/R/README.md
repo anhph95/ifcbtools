@@ -5,14 +5,10 @@ downloaded scripts use that current working directory as the analysis workspace:
 inputs are read from `data/NESLTER_transect`, results are written under
 `results`, and logs are written under `logs`.
 
-Install the R metric dependency directly from Git:
+Install the R metric dependency from CRAN:
 
 ```r
-if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
-remotes::install_git(
-  "https://github.com/anhph95/ifcbtools.git",
-  subdir = "community.variability/R/community.variability"
-)
+install.packages("community.variability")
 ```
 
 Download the R analysis scripts into the current working directory:

@@ -19,10 +19,6 @@ library(community.variability)
 source("ifcb_common.R")
 logger <- setup_workflow_logging("ifcb_power_analysis_R")
 logger$info("Starting R power-analysis workflow")
-options(error = function() {
-  error <- geterrmessage()
-  logger$error(simpleError(error))
-})
 ## ------------------------------------------------
 ## 1. Project settings
 ## ------------------------------------------------

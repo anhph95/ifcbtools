@@ -27,10 +27,6 @@ library(community.variability)
 source("ifcb_common.R")
 logger <- setup_workflow_logging("ifcb_single_season_R")
 logger$info("Starting R single-season workflow")
-options(error = function() {
-  error <- geterrmessage()
-  logger$error(simpleError(error))
-})
 ## ------------------------------------------------
 ## 1. Project settings
 ## ------------------------------------------------

@@ -26,11 +26,7 @@ pip install "git+https://github.com/anhph95/ifcbtools.git#subdirectory=community
 ```
 
 ```r
-if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
-remotes::install_git(
-  "https://github.com/anhph95/ifcbtools.git",
-  subdir = "community.variability/R/community.variability"
-)
+install.packages("community.variability")
 ```
 
 ## Copy Editable Analysis Scripts

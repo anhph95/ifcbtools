@@ -23,10 +23,6 @@ library(community.variability)
 source("ifcb_common.R")
 logger <- setup_workflow_logging("ifcb_seasonal_comparison_R")
 logger$info("Starting R seasonal-comparison workflow")
-options(error = function() {
-  error <- geterrmessage()
-  logger$error(simpleError(error))
-})
 ## ------------------------------------------------
 ## 1. Project settings
 ## ------------------------------------------------

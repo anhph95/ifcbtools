@@ -223,14 +223,10 @@ Python from a local checkout:
 pip install -e community.variability/python
 ```
 
-R from GitHub:
+R from CRAN:
 
 ```r
-install.packages("remotes")
-remotes::install_git(
-  "https://github.com/anhph95/ifcbtools.git",
-  subdir = "community.variability/R/community.variability"
-)
+install.packages("community.variability")
 ```
 
 R from a local checkout:

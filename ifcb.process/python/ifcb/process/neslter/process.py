@@ -24,17 +24,19 @@ from .taxonomy import import_google_sheet
 LOGGER = logging.getLogger("ifcb.process.neslter")
 
 
-def normalization_scaling_factor(input_file: str | os.PathLike[str]) -> float:
-    """Return the unit conversion scale implied by the IFCB product filename."""
-    stem = Path(input_file).stem.lower()
-    if "count" in stem:
-        return 1000.0
-    if "carbon" in stem:
-        return 0.001
-    raise ValueError(
-        "Cannot infer IFCB normalization scale from input filename. "
-        "Use a count or carbon filename such as ifcb_count.csv or ifcb_carbon.csv."
-    )
+NORMALIZATION_UNITS = {
+    "count": (1000.0, "cells L-1"),
+    "carbon": (0.001, "ug C L-1"),
+}
+
+
+def normalization_settings(data_type: str) -> tuple[float, str]:
+    """Return the unit conversion scale and output unit for an IFCB product."""
+    try:
+        return NORMALIZATION_UNITS[data_type]
+    except KeyError as exc:
+        valid = ", ".join(sorted(NORMALIZATION_UNITS))
+        raise ValueError(f"data_type must be one of: {valid}") from exc
 
 
 def default_output_path(
@@ -72,6 +74,7 @@ def process(
     nutrient_source: str | os.PathLike[str] = DEFAULT_NUTRIENT_URL,
     metadata_file: str | os.PathLike[str] | None = None,
     taxonomy_file: str | os.PathLike[str] | None = None,
+    data_type: str = "count",
     clean: bool = False,
     add_station: bool = False,
     merge_bottle_data: bool = False,
@@ -131,8 +134,13 @@ def process(
         df = pd.merge(meta, raw, on="pid", how="left")
         LOGGER.info("Merged metadata and data: %s rows", len(df))
         df = aggregate_cast_data(df, raw_data_cols)
-        scaling_factor = normalization_scaling_factor(input_path)
-        LOGGER.info("Normalizing taxon columns with scaling factor: %s", scaling_factor)
+        scaling_factor, output_unit = normalization_settings(data_type)
+        LOGGER.info(
+            "Normalizing %s taxon columns with scaling factor %s to output unit: %s",
+            data_type,
+            scaling_factor,
+            output_unit,
+        )
         df = normalize(df, raw_data_cols, scaling_factor=scaling_factor)
     else:
         LOGGER.info("Reading input: %s", input_path)

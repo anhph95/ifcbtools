@@ -78,6 +78,12 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--data-type",
+        choices=["count", "carbon"],
+        default="count",
+        help="Input data product used for --clean normalization.",
+    )
+    parser.add_argument(
         "--download-taxonomy-if-missing",
         action="store_true",
         default=True,
@@ -135,6 +141,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "input_file": input_path.resolve(),
             "output_file": output_path.resolve(),
             "sample_type": args.sample_type,
+            "data_type": args.data_type,
             "all": args.all,
             "metadata_file": metadata_path.resolve(),
             "taxonomy_file": taxonomy_path.resolve(),
@@ -166,6 +173,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             nutrient_source=args.nutrient_source,
             metadata_file=metadata_path,
             taxonomy_file=taxonomy_path,
+            data_type=args.data_type,
             clean=args.clean,
             add_station=args.add_station,
             merge_bottle_data=args.merge_bottle,

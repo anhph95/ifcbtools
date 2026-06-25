@@ -102,9 +102,18 @@ per-liter floating-point values:
 ```bash
 ifcb-process data/NESLTER_transect/ifcb_count.csv \
   --clean \
+  --data-type count \
   --add-station \
   --merge-bottle \
   --merge-nutrient
+```
+
+Use `--data-type carbon` when cleaning carbon products:
+
+```bash
+ifcb-process data/NESLTER_transect/ifcb_carbon.csv \
+  --clean \
+  --data-type carbon
 ```
 
 To enrich an existing CSV without rerunning the clean workflow, omit
@@ -134,6 +143,7 @@ beside the input CSV. Override either path when needed:
 ```bash
 ifcb-process data/NESLTER_transect/counts.csv \
   --clean \
+  --data-type count \
   --metadata-file metadata.csv \
   --taxonomy-file taxa.csv \
   --output-file counts_clean.csv
@@ -166,10 +176,11 @@ The `--clean` operation runs these steps in order:
     Taxon columns, `ml_analyzed`, and `n_images` are summed; `sample_time` is
     the earliest replicate time; other metadata fields keep one unique value
     or join multiple unique values.
-16. Normalize each selected taxon column to product-specific per-liter units:
-    count files use `normalized_value = raw_value / ml_analyzed * 1000`
-    for cells L-1, while carbon files use
-    `normalized_value = raw_value / ml_analyzed * 0.001` for ug C L-1.
+16. Normalize each selected taxon column to product-specific per-liter units
+    selected by `--data-type`: count uses
+    `normalized_value = raw_value / ml_analyzed * 1000` for cells L-1,
+    while carbon uses `normalized_value = raw_value / ml_analyzed * 0.001`
+    for ug C L-1.
 
 After `--clean`, the optional pipeline steps run in this order when selected:
 

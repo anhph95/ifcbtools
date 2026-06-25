@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch
 
 from ifcb.process.neslter.cli import parse_args
-from ifcb.process.neslter.process import default_output_path, normalization_scaling_factor, process
+from ifcb.process.neslter.process import default_output_path, normalization_settings, process
 
 
 class ProcessCliTests(unittest.TestCase):
@@ -33,6 +33,14 @@ class ProcessCliTests(unittest.TestCase):
         args = parse_args(["input.csv", "--clean"])
 
         self.assertTrue(args.clean)
+        self.assertEqual(args.data_type, "count")
+
+    def test_clean_accepts_explicit_carbon_data_type(self) -> None:
+        """Allow carbon input to select carbon-specific normalization."""
+        args = parse_args(["input.csv", "--clean", "--data-type", "carbon"])
+
+        self.assertTrue(args.clean)
+        self.assertEqual(args.data_type, "carbon")
 
     def test_all_enables_every_operation(self) -> None:
         """Expand --all into the complete processing pipeline."""
@@ -55,18 +63,18 @@ class ProcessCliTests(unittest.TestCase):
 
         self.assertEqual(output, Path("data/sample_clean_station_nutrient.csv"))
 
-    def test_count_input_uses_cells_per_liter_scale(self) -> None:
-        """Infer count normalization from the selected input filename."""
-        self.assertEqual(normalization_scaling_factor("data/ifcb_count.csv"), 1000.0)
+    def test_count_data_type_uses_cells_per_liter_scale(self) -> None:
+        """Use count normalization for cell abundance products."""
+        self.assertEqual(normalization_settings("count"), (1000.0, "cells L-1"))
 
-    def test_carbon_input_uses_micrograms_per_liter_scale(self) -> None:
-        """Infer carbon normalization from the selected input filename."""
-        self.assertEqual(normalization_scaling_factor("data/ifcb_carbon.csv"), 0.001)
+    def test_carbon_data_type_uses_micrograms_per_liter_scale(self) -> None:
+        """Use carbon normalization for biomass products."""
+        self.assertEqual(normalization_settings("carbon"), (0.001, "ug C L-1"))
 
-    def test_ambiguous_input_requires_product_name(self) -> None:
-        """Avoid silently applying the wrong unit conversion."""
+    def test_unknown_data_type_fails(self) -> None:
+        """Reject product names without defined unit conversions."""
         with self.assertRaises(ValueError):
-            normalization_scaling_factor("data/ifcb.csv")
+            normalization_settings("biovolume")
 
     def test_all_uses_expanded_operation_suffixes(self) -> None:
         """Name --all output from the operations it expands to."""

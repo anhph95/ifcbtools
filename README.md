@@ -89,6 +89,12 @@ ifcb
 ifcb.process
 ```
 
+To install the test dependency as well:
+
+```bash
+pip install -e "ifcb-export[test]"
+```
+
 ## Install Community Variability Packages
 
 Python from GitHub:

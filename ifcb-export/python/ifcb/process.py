@@ -46,7 +46,8 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         description="Process one IFCB CSV through selected cleaning and enrichment steps.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--input", dest="input_file", required=True, help="Input CSV file.")
+    parser.add_argument("input_file", nargs="?", help="Input CSV file.")
+    parser.add_argument("--input", dest="input_file_option", default=None, help="Input CSV file.")
     parser.add_argument("--output", "--output-file", dest="output_file", default=None, help="Final output CSV file.")
     parser.add_argument("--all", action="store_true", help="Run clean, station, bottle, and nutrient unless explicitly disabled.")
     parser.add_argument("--clean", action=argparse.BooleanOptionalAction, default=None, help="Quality-control metadata, aggregate casts, and normalize values.")
@@ -93,6 +94,14 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--log-level", choices=["DEBUG", "INFO", "WARNING", "ERROR"], default="INFO", help="Logging level. Default: INFO.")
     parser.add_argument("--log-dir", default=None, help="Directory for timestamped logs. Omit to use ./logs.")
     args = parser.parse_args(argv)
+
+    if args.input_file is None and args.input_file_option is None:
+        parser.error("input CSV is required; provide it as a positional argument or with --input.")
+    if args.input_file is not None and args.input_file_option is not None and args.input_file != args.input_file_option:
+        parser.error("provide input CSV either positionally or with --input, not both.")
+    if args.input_file is None:
+        args.input_file = args.input_file_option
+    del args.input_file_option
 
     if args.all:
         for name in ("clean", "station", "bottle", "nutrient"):

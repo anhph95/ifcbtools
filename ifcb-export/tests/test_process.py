@@ -9,11 +9,30 @@ from unittest.mock import patch
 
 import pandas as pd
 
-from ifcb.process import process
+from ifcb.process import parse_args, process
 
 
 class ProcessTests(unittest.TestCase):
     """Verify the public process operation."""
+
+    def test_parse_args_accepts_positional_input(self) -> None:
+        args = parse_args(["sample.csv", "--all"])
+
+        self.assertEqual(args.input_file, "sample.csv")
+        self.assertTrue(args.clean)
+        self.assertTrue(args.station)
+        self.assertTrue(args.bottle)
+        self.assertTrue(args.nutrient)
+
+    def test_parse_args_accepts_input_flag(self) -> None:
+        args = parse_args(["--input", "sample.csv", "--nutrient"])
+
+        self.assertEqual(args.input_file, "sample.csv")
+        self.assertTrue(args.nutrient)
+
+    def test_parse_args_rejects_conflicting_inputs(self) -> None:
+        with self.assertRaises(SystemExit):
+            parse_args(["one.csv", "--input", "two.csv", "--nutrient"])
 
     def test_enrichment_only_writes_final_output(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

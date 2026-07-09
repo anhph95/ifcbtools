@@ -18,8 +18,14 @@ dependencies = [
 ]
 
 [project.scripts]
+"ifcb" = "ifcb.process:main"
 "ifcb.process" = "ifcb.process:main"
 "ifcb.taxonomy" = "ifcb.taxonomy:main"
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.0",
+]
 
 [project.urls]
 Repository = "https://github.com/anhph95/ifcbtools"

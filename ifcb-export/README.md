@@ -11,13 +11,13 @@
 From GitHub without manually cloning the repository:
 
 ```bash
-pip install "git+https://github.com/anhph95/ifcbtools.git#subdirectory=ifcb"
+pip install "git+https://github.com/anhph95/ifcbtools.git#subdirectory=ifcb-export"
 ```
 
 From a local checkout:
 
 ```bash
-pip install -e ifcb
+pip install -e ifcb-export
 ```
 
 This installs:
@@ -31,6 +31,12 @@ and the commands:
 ```bash
 ifcb
 ifcb.process
+```
+
+To install the test dependency as well:
+
+```bash
+pip install -e "ifcb-export[test]"
 ```
 
 ## MATLAB Export

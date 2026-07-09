@@ -9,8 +9,13 @@ Set MATLAB's current folder to the workspace where the `data/` directory
 should be created. Download the standalone script directly from GitHub:
 
 ```matlab
-scriptUrl = "https://raw.githubusercontent.com/anhph95/ifcbtools/main/ifcb/matlab/export_ifcb.m";
+scriptUrl = "https://raw.githubusercontent.com/anhph95/ifcbtools/main/ifcb-export/matlab/export_ifcb.m";
 websave("export_ifcb.m", scriptUrl);
+```
+
+Then run the downloaded function with one input MAT file:
+
+```matlab
 export_ifcb( ...
     "\\sosiknas1\IFCB_products\NESLTER_transect\summary\carbon_group_class_withTS.mat")
 ```

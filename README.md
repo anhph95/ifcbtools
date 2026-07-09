@@ -30,11 +30,16 @@ ifcb-export MATLAB export -> ifcb-export Python clean -> optional fill -> commun
 
 All downstream processing starts from CSV files exported from the IFCB MATLAB
 summary products. Set MATLAB's current folder to your workspace, then download
-and run the standalone exporter:
+the standalone exporter:
 
 ```matlab
 scriptUrl = "https://raw.githubusercontent.com/anhph95/ifcbtools/main/ifcb-export/matlab/export_ifcb.m";
 websave("export_ifcb.m", scriptUrl);
+```
+
+Then run the downloaded function:
+
+```matlab
 export_ifcb()
 ```
 

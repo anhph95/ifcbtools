@@ -16,8 +16,7 @@ websave("export_ifcb.m", scriptUrl);
 Then run the downloaded function with one input MAT file:
 
 ```matlab
-export_ifcb( ...
-    "\\sosiknas1\IFCB_products\NESLTER_transect\summary\carbon_group_class_withTS.mat")
+export_ifcb("\\sosiknas1\IFCB_products\NESLTER_transect\summary\carbon_group_class_withTS.mat")
 ```
 
 With only the input path, the function scans available table variables, asks
@@ -36,29 +35,19 @@ carbon_group_class_withTS.mat
 For scripted carbon export, provide the table and type explicitly:
 
 ```matlab
-export_ifcb( ...
-    "\\sosiknas1\IFCB_products\NESLTER_transect\summary\carbon_group_class_withTS.mat", ...
-    data_table="classC_opt_adhoc_merge", ...
-    data_type="carbon")
+export_ifcb("\\sosiknas1\IFCB_products\NESLTER_transect\summary\carbon_group_class_withTS.mat", data_table="classC_opt_adhoc_merge", data_type="carbon")
 ```
 
 For scripted count export, select the count MAT file and count data table:
 
 ```matlab
-export_ifcb( ...
-    "\\sosiknas1\IFCB_products\NESLTER_transect\summary\count_group_class_withTS.mat", ...
-    data_table="classcount_opt_adhoc_merge", ...
-    data_type="count")
+export_ifcb("\\sosiknas1\IFCB_products\NESLTER_transect\summary\count_group_class_withTS.mat", data_table="classcount_opt_adhoc_merge", data_type="count")
 ```
 
 For scripted runs, set the output path explicitly when needed:
 
 ```matlab
-export_ifcb( ...
-    "path/to/product.mat", ...
-    data_table="custom_carbon_table", ...
-    data_type="carbon", ...
-    output_dir="path/to/output")
+export_ifcb("path/to/product.mat", data_table="custom_carbon_table", data_type="carbon", output_dir="path/to/output")
 ```
 
 The function does not search for alternate paths.

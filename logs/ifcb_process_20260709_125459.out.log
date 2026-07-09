@@ -1,0 +1,19 @@
+2026-07-09 12:54:59,212 | INFO | root | Logging to: /mnt/c/Users/anhph/OneDrive - Woods Hole Oceanographic Institution/ifcbtools/logs/ifcb_process_20260709_125459.out.log
+2026-07-09 12:54:59,216 | INFO | root | Errors to: /mnt/c/Users/anhph/OneDrive - Woods Hole Oceanographic Institution/ifcbtools/logs/ifcb_process_20260709_125459.err.log
+2026-07-09 12:54:59,224 | INFO | ifcb | Run configuration:
+2026-07-09 12:54:59,228 | INFO | ifcb |   command: /home/anhph/venv/ifcb/bin/ifcb data/NESLTER_transect/ifcb_carbon.csv --all
+2026-07-09 12:54:59,231 | INFO | ifcb |   input_file: /mnt/c/Users/anhph/OneDrive - Woods Hole Oceanographic Institution/ifcbtools/data/NESLTER_transect/ifcb_carbon.csv
+2026-07-09 12:54:59,236 | INFO | ifcb |   output_file: None
+2026-07-09 12:54:59,239 | INFO | ifcb |   clean: True
+2026-07-09 12:54:59,244 | INFO | ifcb |   station: True
+2026-07-09 12:54:59,246 | INFO | ifcb |   bottle: True
+2026-07-09 12:54:59,249 | INFO | ifcb |   nutrient: True
+2026-07-09 12:54:59,252 | INFO | ifcb |   all: True
+2026-07-09 12:54:59,255 | ERROR | ifcb | IFCB process failed
+Traceback (most recent call last):
+  File "/mnt/c/Users/anhph/OneDrive - Woods Hole Oceanographic Institution/ifcbtools/ifcb-export/python/ifcb/process.py", line 235, in main
+    output = process(
+             ^^^^^^^^
+  File "/mnt/c/Users/anhph/OneDrive - Woods Hole Oceanographic Institution/ifcbtools/ifcb-export/python/ifcb/process.py", line 149, in process
+    raise FileNotFoundError(f"Input file does not exist: {input_path}")
+FileNotFoundError: Input file does not exist: data/NESLTER_transect/ifcb_carbon.csv

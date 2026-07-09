@@ -52,8 +52,7 @@ websave("export_ifcb.m", scriptUrl);
 Then run the downloaded function with one input MAT file:
 
 ```matlab
-export_ifcb( ...
-    "\\sosiknas1\IFCB_products\NESLTER_transect\summary\carbon_group_class_withTS.mat")
+export_ifcb("\\sosiknas1\IFCB_products\NESLTER_transect\summary\carbon_group_class_withTS.mat")
 ```
 
 With only the input path, the exporter scans available table variables, asks
@@ -72,19 +71,13 @@ carbon_group_class_withTS.mat
 Scripted runs can provide the table and type explicitly. Carbon:
 
 ```matlab
-export_ifcb( ...
-    "\\sosiknas1\IFCB_products\NESLTER_transect\summary\carbon_group_class_withTS.mat", ...
-    data_table="classC_opt_adhoc_merge", ...
-    data_type="carbon")
+export_ifcb("\\sosiknas1\IFCB_products\NESLTER_transect\summary\carbon_group_class_withTS.mat", data_table="classC_opt_adhoc_merge", data_type="carbon")
 ```
 
 Count:
 
 ```matlab
-export_ifcb( ...
-    "\\sosiknas1\IFCB_products\NESLTER_transect\summary\count_group_class_withTS.mat", ...
-    data_table="classcount_opt_adhoc_merge", ...
-    data_type="count")
+export_ifcb("\\sosiknas1\IFCB_products\NESLTER_transect\summary\count_group_class_withTS.mat", data_table="classcount_opt_adhoc_merge", data_type="count")
 ```
 
 Set `output_dir` explicitly for scripted runs. The function makes no
@@ -131,11 +124,7 @@ measurement + metadata CSV, runs quality-control checks, aggregates cast
 replicates, and normalizes taxon values to per-liter floating-point values:
 
 ```bash
-ifcb data/NESLTER_transect/ifcb_count.csv \
-  --clean \
-  --station \
-  --bottle \
-  --nutrient
+ifcb data/NESLTER_transect/ifcb_count.csv --clean --station --bottle --nutrient
 ```
 
 When `--data-type` is omitted, the clean workflow infers `count` or `carbon`
@@ -143,9 +132,7 @@ from standard filenames such as `ifcb_count.csv` and `ifcb_carbon.csv`. Use
 `--data-type` for ambiguous or renamed input files:
 
 ```bash
-ifcb data/NESLTER_transect/ifcb_carbon.csv \
-  --clean \
-  --data-type carbon
+ifcb data/NESLTER_transect/ifcb_carbon.csv --clean --data-type carbon
 ```
 
 To enrich an existing CSV without rerunning the clean workflow, omit
@@ -176,11 +163,7 @@ During cleaning, `ifcb_taxonomy.csv` defaults to a file beside the input CSV.
 Override that path when needed:
 
 ```bash
-ifcb data/NESLTER_transect/counts.csv \
-  --clean \
-  --data-type count \
-  --taxonomy-file taxa.csv \
-  --output-file counts_clean.csv
+ifcb data/NESLTER_transect/counts.csv --clean --data-type count --taxonomy-file taxa.csv --output-file counts_clean.csv
 ```
 
 The `--clean` operation runs these steps in order:
@@ -259,9 +242,7 @@ are assigned against the main target stations only: `MVCO` and `L1` through
 Input and output paths can also be selected explicitly:
 
 ```bash
-ifcb.process --input data/NESLTER_transect/biomass_cleaned.csv \
-  --taxonomy-file taxa.csv \
-  --output-file biomass_filled.csv
+ifcb.process --input data/NESLTER_transect/biomass_cleaned.csv --taxonomy-file taxa.csv --output-file biomass_filled.csv
 ```
 
 ## Useful Imports

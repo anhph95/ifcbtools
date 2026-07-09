@@ -1,0 +1,8 @@
+2026-07-09 12:54:59,255 | ERROR | ifcb | IFCB process failed
+Traceback (most recent call last):
+  File "/mnt/c/Users/anhph/OneDrive - Woods Hole Oceanographic Institution/ifcbtools/ifcb-export/python/ifcb/process.py", line 235, in main
+    output = process(
+             ^^^^^^^^
+  File "/mnt/c/Users/anhph/OneDrive - Woods Hole Oceanographic Institution/ifcbtools/ifcb-export/python/ifcb/process.py", line 149, in process
+    raise FileNotFoundError(f"Input file does not exist: {input_path}")
+FileNotFoundError: Input file does not exist: data/NESLTER_transect/ifcb_carbon.csv

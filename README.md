@@ -7,7 +7,7 @@ and metacommunity variability analysis.
 
 ```text
 ifcbtools/
-|-- ifcb.process/                   # MATLAB export plus Python processing package
+|-- ifcb-export/                   # MATLAB export plus Python processing package
 |-- community.variability/          # Installable MATLAB, R, and Python metric code
 |-- analysis/                       # Analysis workflows using the packages above
 |-- data/                           # Local data products, ignored by Git
@@ -17,12 +17,12 @@ ifcbtools/
 ## Main Workflow
 
 ```text
-ifcb.process MATLAB export -> ifcb.process Python clean -> optional fill -> community.variability analysis
+ifcb-export MATLAB export -> ifcb-export Python clean -> optional fill -> community.variability analysis
 ```
 
 ## Documentation
 
-- [IFCB processing](ifcb.process/README.md)
+- [IFCB processing](ifcb-export/README.md)
 - [Community variability](community.variability/README.md)
 - [Community variability analysis](analysis/community-variability/README.md)
 
@@ -33,7 +33,7 @@ summary products. Set MATLAB's current folder to your workspace, then download
 and run the standalone exporter:
 
 ```matlab
-scriptUrl = "https://raw.githubusercontent.com/anhph95/ifcbtools/main/ifcb.process/matlab/export_ifcb.m";
+scriptUrl = "https://raw.githubusercontent.com/anhph95/ifcbtools/main/ifcb-export/matlab/export_ifcb.m";
 websave("export_ifcb.m", scriptUrl);
 export_ifcb()
 ```
@@ -68,20 +68,20 @@ The function does not assume a repository layout or search alternate paths.
 From GitHub without manually cloning the repository:
 
 ```bash
-pip install "git+https://github.com/anhph95/ifcbtools.git#subdirectory=ifcb.process"
+pip install "git+https://github.com/anhph95/ifcbtools.git#subdirectory=ifcb-export"
 ```
 
 From a local checkout:
 
 ```bash
-pip install -e ifcb.process
+pip install -e ifcb-export
 ```
 
-This installs the `ifcb.process` package plus the processing commands:
+This installs the `ifcb-export` package plus the processing commands:
 
 ```bash
-ifcb-process
-ifcb-fill-missing
+ifcb
+ifcb.process
 ```
 
 ## Install Community Variability Packages

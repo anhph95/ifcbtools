@@ -13,13 +13,11 @@ import numpy as np
 import pandas as pd
 from geopy.distance import geodesic as geo_distance
 
-from .constants import DEFAULT_STATION_REF_URL
-
 
 def load_station_reference(station_reference: pd.DataFrame | str | os.PathLike[str] | None = None) -> pd.DataFrame:
     """Load and normalize the NES-LTER station reference table."""
     if station_reference is None:
-        st = pd.read_csv(DEFAULT_STATION_REF_URL)
+        st = pd.read_csv("https://nes-lter-api.whoi.edu/api/stations/file.csv")
     elif isinstance(station_reference, (str, os.PathLike)):
         st = pd.read_csv(station_reference)
     else:

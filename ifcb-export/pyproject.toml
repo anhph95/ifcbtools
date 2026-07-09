@@ -3,9 +3,9 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ifcb.process"
+name = "ifcb-export"
 version = "0.1.0"
-description = "NES-LTER IFCB data processing tools"
+description = "IFCB export, cleaning, and enrichment tools"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -18,8 +18,8 @@ dependencies = [
 ]
 
 [project.scripts]
-ifcb-fill-missing = "ifcb.process.neslter.fill:main"
-ifcb-process = "ifcb.process.neslter.cli:main"
+"ifcb.process" = "ifcb.process:main"
+"ifcb.taxonomy" = "ifcb.taxonomy:main"
 
 [project.urls]
 Repository = "https://github.com/anhph95/ifcbtools"

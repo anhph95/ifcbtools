@@ -13,74 +13,11 @@ import numpy as np
 import pandas as pd
 
 from .add import fill_cast_from_udw_from_bottles, nutrient
-from .stations import assign_nearest_stations, load_station_reference
-from .taxonomy import add_taxonomy_label, map_taxa_to_label
 from ifcb.logging import log_run_configuration, redact_command_line, setup_logging
 
 LOGGER = logging.getLogger("ifcb")
 
 DEFAULT_TARGET_STATIONS = ("MVCO", "L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8", "L9", "L10", "L11")
-
-
-def assign_underway_nearest_stations(
-    df: pd.DataFrame,
-    station_reference: pd.DataFrame | str | os.PathLike[str] | None = None,
-    max_station_distance_km: float | None = 2.0,
-    target_stations: Sequence[str] = DEFAULT_TARGET_STATIONS,
-    sample_type_col: str = "sample_type",
-    underway_label: str = "underway",
-) -> pd.DataFrame:
-    """Assign nearest station to underway rows so they can fill missing casts."""
-    return assign_missing_nearest_stations(
-        df,
-        station_reference=station_reference,
-        max_station_distance_km=max_station_distance_km,
-        target_stations=target_stations,
-        sample_type_col=sample_type_col,
-        sample_types=(underway_label,),
-    )
-
-
-def assign_missing_nearest_stations(
-    df: pd.DataFrame,
-    station_reference: pd.DataFrame | str | os.PathLike[str] | None = None,
-    max_station_distance_km: float | None = 2.0,
-    target_stations: Sequence[str] = DEFAULT_TARGET_STATIONS,
-    sample_type_col: str = "sample_type",
-    sample_types: Sequence[str] = ("cast", "underway"),
-    station_col: str = "nearest_station",
-    station_distance_col: str = "station_distance",
-) -> pd.DataFrame:
-    """Assign missing nearest stations using only the target metacommunity stations."""
-    out = df.copy()
-    if station_col not in out.columns:
-        out[station_col] = pd.NA
-    if station_distance_col not in out.columns:
-        out[station_distance_col] = np.nan
-    out["sample_time"] = pd.to_datetime(out["sample_time"], errors="coerce", utc=True)
-
-    missing_station = out[station_col].isna()
-    if sample_type_col in out.columns:
-        missing_station &= out[sample_type_col].isin(sample_types)
-    if not missing_station.any():
-        return out
-
-    station_ref = load_station_reference(station_reference)
-    station_ref = station_ref.loc[station_ref["station"].isin(tuple(target_stations))].copy()
-    if station_ref.empty:
-        raise ValueError("No target stations found in station reference.")
-
-    assigned = assign_nearest_stations(
-        out.loc[missing_station],
-        station_reference=station_ref,
-        lat_col="latitude",
-        lon_col="longitude",
-        time_col="sample_time",
-        max_distance_km=max_station_distance_km,
-    )
-    out.loc[missing_station, station_col] = assigned[station_col].to_numpy()
-    out.loc[missing_station, station_distance_col] = assigned[station_distance_col].to_numpy()
-    return out
 
 
 def fill_missing_casts_from_underway(
@@ -186,25 +123,16 @@ def fill_missing_casts_from_underway(
 
 def fill_dataset(
     df: pd.DataFrame,
-    taxonomy: pd.DataFrame,
     target_stations: Sequence[str] = DEFAULT_TARGET_STATIONS,
-    station_reference: str | os.PathLike[str] | None = "https://nes-lter-api.whoi.edu/api/stations/file.csv",
-    max_station_distance_km: float | None = 2.0,
     bottle_url_template: str = "https://nes-lter-api.whoi.edu/api/ctd/bottles/{cruise}.csv",
     nutrient_source: str | os.PathLike[str] = "https://nes-lter-api.whoi.edu/api/nut/all.csv",
 ) -> pd.DataFrame:
     """Create missing IFCB cast samples from one dataframe."""
     df = df.copy()
-    taxonomy = add_taxonomy_label(taxonomy)
     input_rows = len(df)
-    df = assign_missing_nearest_stations(
-        df,
-        station_reference=station_reference,
-        max_station_distance_km=max_station_distance_km,
-        target_stations=target_stations,
-    )
+    if "nearest_station" not in df.columns:
+        raise ValueError("fill input must include nearest_station; run station assignment before fill.")
 
-    df, _, taxonomy = map_taxa_to_label(df, taxonomy)
     df = fill_missing_casts_from_underway(
         df,
         target_stations=target_stations,
@@ -228,14 +156,6 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--input", dest="input_file", required=True, help="Input IFCB CSV file.")
     parser.add_argument("--output", "--output-file", dest="output_file", default=None, help="Output CSV file; defaults to an _fill suffix.")
-    parser.add_argument(
-        "--taxonomy-file",
-        default=None,
-        help="Taxonomy input path; defaults to ifcb_taxonomy.csv beside the input file.",
-    )
-    parser.add_argument("--station-reference", default=None, help="Station reference CSV path.")
-    parser.add_argument("--max-station-distance-km", type=float, default=2.0)
-    parser.add_argument("--no-station-distance-limit", action="store_true")
     parser.add_argument("--bottle-url-template", default="https://nes-lter-api.whoi.edu/api/ctd/bottles/{cruise}.csv")
     parser.add_argument("--nutrient-source", default="https://nes-lter-api.whoi.edu/api/nut/all.csv")
     parser.add_argument("--log-level", choices=["DEBUG", "INFO", "WARNING", "ERROR"], default="INFO")
@@ -250,9 +170,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         output_path = input_path.with_name(f"{input_path.stem}_fill{input_path.suffix}")
     else:
         output_path = Path(args.output_file)
-    taxonomy_path = Path(args.taxonomy_file) if args.taxonomy_file is not None else input_path.parent / "ifcb_taxonomy.csv"
     log_dir = Path(args.log_dir) if args.log_dir is not None else Path.cwd() / "logs"
-    max_distance = None if args.no_station_distance_limit else args.max_station_distance_km
     setup_logging(log_dir=log_dir, name="ifcb_fill_missing", level=getattr(logging, args.log_level))
     LOGGER.info("Starting IFCB missing-cast fill for %s", input_path)
     log_run_configuration(
@@ -261,9 +179,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             "command": redact_command_line(sys.argv),
             "input_file": input_path.resolve(),
             "output_file": output_path.resolve(),
-            "taxonomy_file": taxonomy_path.resolve(),
-            "station_reference": args.station_reference,
-            "max_station_distance_km": max_distance,
             "bottle_url_template": args.bottle_url_template,
             "nutrient_source": args.nutrient_source,
             "log_level": args.log_level,
@@ -274,16 +189,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         if not input_path.exists():
             raise FileNotFoundError(f"Selected input file does not exist: {input_path}")
-        if not taxonomy_path.exists():
-            raise FileNotFoundError(f"Selected taxonomy file does not exist: {taxonomy_path}")
 
         df = pd.read_csv(input_path, low_memory=False)
-        taxonomy = pd.read_csv(taxonomy_path, low_memory=False)
         output = fill_dataset(
             df,
-            taxonomy,
-            station_reference=args.station_reference,
-            max_station_distance_km=max_distance,
             bottle_url_template=args.bottle_url_template,
             nutrient_source=args.nutrient_source,
         )

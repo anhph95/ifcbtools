@@ -226,23 +226,37 @@ Use this only when an analysis needs balanced station coverage.
 python -m ifcb.fill --input data/NESLTER_transect/ifcb_carbon_clean_station_bottle_nutrient.csv
 ```
 
-This reads one explicit input CSV, creates missing `cast_from_udw` rows from
-same-cruise underway samples, fills bottle/nutrient values only for the new
-rows, and writes by default:
+This reads one explicit input CSV that already includes `nearest_station` from
+the station-assignment step, creates missing `cast_from_udw` rows from
+same-cruise underway samples with existing station assignments, fills
+bottle/nutrient values only for the new rows, and writes by default:
 
 ```text
 ifcb_carbon_clean_station_bottle_nutrient.csv -> ifcb_carbon_clean_station_bottle_nutrient_fill.csv
 ```
 
-The taxonomy CSV is read to map annotations into `Label` groups but is not
-modified or copied. Missing nearest-station values for cast and underway rows
-are assigned against the main target stations only: `MVCO` and `L1` through
-`L11`.
+Rows that still lack `nearest_station` are ignored as fill candidates; run the
+station step before fill.
 
 Input and output paths can also be selected explicitly:
 
 ```bash
-ifcb.process --input data/NESLTER_transect/biomass_cleaned.csv --taxonomy-file taxa.csv --output-file biomass_filled.csv
+python -m ifcb.fill --input data/NESLTER_transect/biomass_cleaned.csv --output-file biomass_filled.csv
+```
+
+## Taxonomy Mapping
+
+Use `ifcb.taxonomy` when taxon columns need to be aggregated from one taxonomy
+level to another.
+
+```bash
+ifcb.taxonomy --input data/NESLTER_transect/ifcb_carbon_mix.csv --taxonomy-file data/NESLTER_transect/ifcb_taxonomy.csv --output data/NESLTER_transect/ifcb_carbon_label.csv --from-level Annotations --to-level Label
+```
+
+The same mapper is available in Python:
+
+```python
+from ifcb.taxonomy import taxonomy_mapping
 ```
 
 ## Useful Imports

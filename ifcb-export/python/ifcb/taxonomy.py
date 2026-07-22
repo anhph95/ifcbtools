@@ -7,7 +7,7 @@ import logging
 import os
 import re
 from pathlib import Path
-from typing import Callable, Sequence
+from typing import Sequence
 
 import pandas as pd
 
@@ -40,73 +40,12 @@ def import_google_sheet(share_url: str, save_path: str | os.PathLike[str] | None
     return df
 
 
-DEFAULT_TAXONOMIC_LEVELS = ("Phylum", "Class", "Order", "Family", "Genus", "Species")
-
-
-def add_taxonomy_label(
-    taxonomy: pd.DataFrame,
-    taxonomic_levels: Sequence[str] = DEFAULT_TAXONOMIC_LEVELS,
-    label_col: str = "Label",
-) -> pd.DataFrame:
-    """Create a filled taxon label from the deepest available taxonomic level.
-
-    For each annotation j, the label is the last non-missing value along:
-    Phylum -> Class -> Order -> Family -> Genus -> Species.
-    """
-    taxonomy = taxonomy.copy()
-    for col in taxonomy.columns:
-        if pd.api.types.is_object_dtype(taxonomy[col]) or pd.api.types.is_string_dtype(taxonomy[col]):
-            taxonomy[col] = taxonomy[col].map(lambda x: x.strip() if isinstance(x, str) else x)
-    levels = [col for col in taxonomic_levels if col in taxonomy.columns]
-    if not levels:
-        raise ValueError("taxonomy must include at least one taxonomic level column.")
-    taxonomy[label_col] = taxonomy[levels].ffill(axis=1).iloc[:, -1]
-    return taxonomy
-
-
-def map_taxa_to_label(
-    df: pd.DataFrame,
-    taxonomy: pd.DataFrame,
-    from_level: str = "Annotations",
-    to_level: str = "Label",
-    aggfunc: str = "sum",
-) -> tuple[pd.DataFrame, list[str], pd.DataFrame]:
-    """Aggregate annotation columns to a taxonomic label while keeping metadata.
-
-    Mathematically, if several annotation columns j map to the same label g,
-    the filled table stores X_g = sum_j X_j for each sample row.
-    """
-    taxonomy = taxonomy.copy()
-    for col in taxonomy.columns:
-        if pd.api.types.is_object_dtype(taxonomy[col]) or pd.api.types.is_string_dtype(taxonomy[col]):
-            taxonomy[col] = taxonomy[col].map(lambda x: x.strip() if isinstance(x, str) else x)
-    if to_level not in taxonomy.columns:
-        levels = [col for col in DEFAULT_TAXONOMIC_LEVELS if col in taxonomy.columns]
-        if not levels:
-            raise ValueError("taxonomy must include at least one taxonomic level column.")
-        taxonomy[to_level] = taxonomy[levels].ffill(axis=1).iloc[:, -1]
-    if from_level not in taxonomy.columns or to_level not in taxonomy.columns:
-        raise ValueError(f"taxonomy must include '{from_level}' and '{to_level}'.")
-
-    mapping = taxonomy.set_index(from_level)[to_level].dropna().to_dict()
-    mapped_taxa = [col for col in df.columns if col in mapping]
-    metadata_cols = [col for col in df.columns if col not in mapped_taxa]
-
-    taxa = df.loc[:, mapped_taxa].apply(pd.to_numeric, errors="coerce").copy()
-    taxa.columns = [mapping[col] for col in mapped_taxa]
-    taxa_agg = taxa.T.groupby(level=0).agg(aggfunc).T
-
-    out = pd.concat([df.loc[:, metadata_cols].copy(), taxa_agg], axis=1)
-    LOGGER.info("Mapped %s annotation columns to %s taxon labels", len(mapped_taxa), len(taxa_agg.columns))
-    return out, sorted(taxa_agg.columns.tolist()), taxonomy
-
-
-def taxon_mapping(
+def taxonomy_mapping(
     df_full: pd.DataFrame,
     taxonomy: pd.DataFrame | str | Path = "taxonomy.csv",
     from_level: str = "Annotations",
     to_level: str = "Genus",
-    aggfunc: str | Callable = "sum",
+    aggfunc: str = "sum",
 ) -> tuple[pd.DataFrame, list[str]]:
     """Aggregate taxon columns from one taxonomy level to another.
 
@@ -163,23 +102,6 @@ def taxon_mapping(
     return df_result, sorted(df_agg.columns.tolist())
 
 
-def taxonomy_mapping(
-    df_full: pd.DataFrame,
-    taxonomy: pd.DataFrame | str | Path = "taxonomy.csv",
-    from_level: str = "Annotations",
-    to_level: str = "Genus",
-    aggfunc: str | Callable = "sum",
-) -> tuple[pd.DataFrame, list[str]]:
-    """Alias for :func:`taxon_mapping` using the more explicit function name."""
-    return taxon_mapping(
-        df_full,
-        taxonomy=taxonomy,
-        from_level=from_level,
-        to_level=to_level,
-        aggfunc=aggfunc,
-    )
-
-
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     """Parse command-line arguments for taxonomy mapping."""
     parser = argparse.ArgumentParser(
@@ -209,7 +131,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             raise FileNotFoundError(f"Taxonomy file does not exist: {taxonomy_path}")
 
         df = pd.read_csv(input_path, low_memory=False)
-        mapped, taxa = taxon_mapping(
+        mapped, taxa = taxonomy_mapping(
             df,
             taxonomy=taxonomy_path,
             from_level=args.from_level,

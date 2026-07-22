@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import pandas as pd
 
-from ifcb.taxonomy import import_google_sheet, main, map_taxa_to_label, taxonomy_mapping
+from ifcb.taxonomy import import_google_sheet, main, taxonomy_mapping
 
 
 class TaxonomyTests(unittest.TestCase):
@@ -30,8 +30,8 @@ class TaxonomyTests(unittest.TestCase):
 
         self.assertEqual(taxonomy["Label"].tolist(), ["Thalassiosira", "Dinoflagellata"])
 
-    def test_taxonomy_mapping_alias_aggregates_columns(self) -> None:
-        """Use the public alias to aggregate annotation columns to genus."""
+    def test_taxonomy_mapping_aggregates_columns(self) -> None:
+        """Aggregate annotation columns to genus."""
         df = pd.DataFrame(
             {
                 "pid": ["sample1", "sample2"],
@@ -91,7 +91,7 @@ class TaxonomyTests(unittest.TestCase):
             self.assertEqual(mapped["pid"].tolist(), ["sample1", "sample2"])
             self.assertEqual(mapped["Shared"].tolist(), [4, 6])
 
-    def test_map_taxa_to_label_preserves_all_mapped_taxa(self) -> None:
+    def test_taxonomy_mapping_preserves_all_mapped_taxa(self) -> None:
         """Mapping does not hard-code taxon exclusions."""
         df = pd.DataFrame(
             {
@@ -107,7 +107,7 @@ class TaxonomyTests(unittest.TestCase):
             }
         )
 
-        mapped, taxa, _ = map_taxa_to_label(df, taxonomy)
+        mapped, taxa = taxonomy_mapping(df, taxonomy, to_level="Label")
 
         self.assertEqual(taxa, ["Nanoplankton", "Other"])
         self.assertEqual(mapped["Nanoplankton"].tolist(), [2])

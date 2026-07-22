@@ -31,7 +31,7 @@ def filter_and_normalize(
     df["longitude"] = pd.to_numeric(df["longitude"], errors="coerce")
     df["latitude"] = pd.to_numeric(df["latitude"], errors="coerce")
     df = df.dropna(subset=["sample_time", "longitude", "latitude", "ml_analyzed"])
-    df["sample_time"] = pd.to_datetime(df["sample_time"], errors="coerce")
+    df["sample_time"] = pd.to_datetime(df["sample_time"], errors="coerce", format="mixed")
     df = df.dropna(subset=["sample_time"])
     df["year"] = df["sample_time"].dt.year
     df["month"] = df["sample_time"].dt.month
@@ -95,7 +95,7 @@ def filter_and_normalize(
             if not frame.empty
         ]
         df = pd.concat(frames, ignore_index=True)
-        df["sample_time"] = pd.to_datetime(df["sample_time"], errors="coerce")
+        df["sample_time"] = pd.to_datetime(df["sample_time"], errors="coerce", format="mixed")
         df = df.sort_values("sample_time").reset_index(drop=True)
         LOGGER.info("Cast aggregation completed: %s rows", len(df))
     else:
